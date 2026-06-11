@@ -1,0 +1,8 @@
+# Testing And Quality Rules
+
+Before finishing Flutter work:
+- run `flutter analyze`
+- run `flutter test`
+- keep widgets free from API calls
+- keep domain logic testable
+- keep errors user-friendly

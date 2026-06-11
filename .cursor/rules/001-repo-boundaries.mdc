@@ -1,0 +1,50 @@
+# Repository Boundaries
+
+This repository is `wiloo-app-mobile`: the Flutter client for Android, iOS, and desktop.
+
+The historical `wiloo` platform repository owns:
+
+- `apps/backend`: NestJS backend, Better Auth, business API, database access, guards, tenant logic, and domain rules
+- `apps/frontend`: existing Next.js web application
+
+## Source Of Truth
+
+The backend remains the source of truth for:
+
+- authentication and session validity
+- roles and scopes
+- tenant/org context
+- business rules
+- persistence
+- API contracts
+- Timeclock terminal authorization
+
+Flutter consumes the existing backend API. Flutter does not define backend behavior.
+
+## Allowed Here
+
+- Flutter app code
+- Flutter UI, navigation, state management, and platform integration
+- Flutter DTOs and API clients aligned with backend contracts
+- Flutter tests
+- mobile documentation, ADRs, and Cursor rules
+
+## Not Allowed Here
+
+- backend endpoint implementation
+- backend authentication flows
+- backend guards, interceptors, or decorators
+- database schema or migration changes
+- custom mobile auth endpoints
+- JWT systems outside Better Auth
+- backend business rule rewrites
+- direct changes to backend code
+
+## Non-Negotiable Rules
+
+- Do not touch backend code from this repository.
+- Do not create backend endpoints from this repository.
+- Do not generate Flutter code unless the user explicitly asks for implementation.
+- Do not modify `lib/` when the user asks for documentation-only work.
+- Check backend documentation, Swagger/OpenAPI, or backend contracts before creating Flutter DTOs.
+- If mobile needs a backend change, document it as a backend requirement and handle it in the platform/backend repository.

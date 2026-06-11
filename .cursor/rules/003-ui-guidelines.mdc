@@ -1,0 +1,25 @@
+# Wiloo UI Guidelines
+
+Design must be modern, clean and adapted to HR and timeclock use cases.
+
+Use:
+- Material 3
+- responsive layouts
+- large touch targets for tablet/kiosk timeclock mode
+- useful animations only
+- consistent spacing, radius, shadows and typography
+
+Timeclock interface:
+- kiosk-friendly
+- fullscreen
+- minimal navigation
+- PIN, QR and Face AI flows must be fast and simple
+- clear success and failure feedback
+
+Backoffice interface:
+- dense but readable information layouts
+- efficient forms
+- role-aware navigation
+- no decorative marketing-style screens inside operational workflows
+
+Do not copy UI references blindly. Adapt them to Wiloo's product identity and business context.

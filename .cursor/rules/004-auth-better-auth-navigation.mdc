@@ -1,0 +1,94 @@
+# Better Auth Mobile Session And Navigation Rules
+
+This repository is `wiloo-app-mobile`, the Flutter client. The historical `wiloo` platform repository owns the NestJS backend and the existing Next.js frontend.
+
+Wiloo Mobile uses the existing Better Auth backend. Do not implement a parallel authentication system, do not create backend endpoints, and do not modify backend code from this repository.
+
+## Session Strategy
+
+Use the official Better Auth Bearer plugin for Flutter native user sessions if it is available and validated on the backend.
+
+Flutter stores the Better Auth session token in `flutter_secure_storage` and sends it on general authenticated API requests as:
+
+```text
+Authorization: Bearer <better-auth-session-token>
+```
+
+The token is an opaque Better Auth session token. It is not a JWT. Never decode it or treat it as the source of user claims.
+
+`/api/auth/get-session` is the only source of truth for:
+
+- authentication state
+- user identity
+- role
+- scope
+- tenant/org context
+- session validity
+
+Do not create a custom mobile auth endpoint if the official Better Auth Bearer plugin works. If backend support is missing, document the backend requirement and handle it in the platform/backend repository.
+
+## Roles And Scopes
+
+Known backend roles:
+
+- `admin`
+- `hr`
+- `manager`
+- `supervisor`
+- `employee`
+- `time_terminal`
+
+Known backend scopes:
+
+- `BACKOFFICE`
+- `TIMECLOCK`
+
+Flutter route guards and UI access decisions must use the role, scope, and tenant/org context returned by `/api/auth/get-session`.
+
+Flutter may guard routes for UX and safety, but the backend remains the source of truth for authorization.
+
+## Navigation
+
+`go_router` navigation must be protected centrally by:
+
+- session state
+- role
+- scope
+- tenant/org context when applicable
+
+Do not scatter authentication redirects across widgets.
+
+Widgets must not make auth decisions from locally persisted user data. They may render based on provider state that was hydrated from `/api/auth/get-session`.
+
+## API Clients
+
+Keep two separate Dio clients:
+
+- general API client for Better Auth and protected backoffice endpoints
+- Timeclock terminal client for `/api/timeclock/*`
+
+The general API client may attach the Better Auth bearer token.
+
+The Timeclock terminal client must use:
+
+- `x-terminal-device-id`
+- `x-terminal-api-key`
+
+The Timeclock terminal client must not rely on, send, or substitute the user bearer token.
+
+The terminal client and user session client must not share auth interceptors.
+
+## Non-Negotiable Rules
+
+- Never create a JWT-only auth model in Flutter.
+- Never create a second mobile auth system beside Better Auth.
+- Never create custom mobile auth endpoints from this repository.
+- Never touch backend code from this repository.
+- Never infer role, scope, tenant, or session validity from the local token.
+- Never store the Better Auth token in plain preferences, logs, source code, or public dart defines.
+- Store session tokens only through `flutter_secure_storage`.
+- Clear the local token and return to guest state on invalid session or `401`.
+- Preserve Better Auth as the auth source of truth for user sessions.
+- Preserve terminal credentials as the source of truth for Timeclock terminal access.
+- Keep `/api/auth/get-session` as the source of truth for session state.
+- Keep `x-terminal-device-id` and `x-terminal-api-key` as the source of truth for Timeclock terminal access.

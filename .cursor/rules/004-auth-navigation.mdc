@@ -1,0 +1,15 @@
+# Auth And Navigation Rules
+
+Authentication uses the existing Better Auth backend.
+
+Roles:
+- employee
+- manager
+- admin
+
+Scopes:
+- backoffice
+- timeclock
+
+Navigation must be guarded by session, role and scope when auth is implemented.
+Do not create a second JWT-only auth model unless the backend explicitly provides a mobile exchange flow.

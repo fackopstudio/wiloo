@@ -1,0 +1,9 @@
+# Environment Rules
+
+Use `--dart-define` for environment configuration.
+
+Expected keys:
+- APP_ENV: dev, staging, prod
+- API_BASE_URL: backend API URL
+
+Do not hardcode production secrets or private API keys in the repository.

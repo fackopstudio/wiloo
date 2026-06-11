@@ -1,0 +1,28 @@
+# Flutter Architecture Rules
+
+Use Clean Architecture by feature.
+
+Preferred structure:
+
+```text
+lib/
+  app/
+  core/
+  shared/
+  features/
+    auth/
+    timeclock/
+    employee/
+    manager/
+    hr_admin/
+```
+
+Each feature should be split into:
+- data
+- domain
+- presentation
+
+Use Riverpod, go_router, Dio, Freezed/json_serializable, flutter_secure_storage and Material 3.
+
+Never put API calls directly inside widgets.
+Never put business logic in UI widgets.

@@ -1,0 +1,37 @@
+# Flutter Architecture Rules
+
+Use Clean Architecture by feature for the future Flutter app.
+
+Preferred structure:
+
+```text
+lib/
+  app/
+  core/
+  shared/
+  features/
+    auth/
+    timeclock/
+    employee/
+    manager/
+    hr_admin/
+```
+
+Each feature should contain:
+- `data/`
+- `domain/`
+- `presentation/`
+
+Preferred Flutter stack:
+- Riverpod for state management
+- go_router for routing
+- Dio for HTTP
+- Freezed/json_serializable for models
+- flutter_secure_storage for sensitive local values
+- Material 3 as the UI baseline
+
+Rules:
+- Never put API calls directly inside widgets.
+- Never mix UI and domain logic.
+- Keep API DTO mapping explicit.
+- Keep the app ready for Android, iOS and macOS desktop.

@@ -1,0 +1,29 @@
+# Auth Rules
+
+The backend uses Better Auth and session-based authentication.
+
+Do not implement a parallel JWT auth system in Flutter.
+
+Flutter must consume backend auth/session behavior correctly:
+- email/password login for backoffice users
+- PIN/QR/NFC plus face verification for timeclock flows
+- session/scope/role checks must be respected
+
+Known roles:
+- `EMPLOYEE`
+- `MANAGER`
+- `ADMIN`
+
+Known scopes:
+- `TIMECLOCK`
+- `BACKOFFICE`
+
+Timeclock endpoints require terminal credentials:
+- `x-terminal-device-id`
+- `x-terminal-api-key`
+
+Routes must be protected by:
+- session state
+- role
+- scope
+- tenant/org context when applicable

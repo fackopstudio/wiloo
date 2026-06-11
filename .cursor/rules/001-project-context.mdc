@@ -1,0 +1,19 @@
+# Wiloo Project Context
+
+Wiloo Mobile is the Flutter application for the Wiloo HR and smart timeclock platform.
+
+Target platforms:
+- Android
+- iOS
+- macOS desktop
+- future Windows desktop
+
+Backend:
+- Existing NestJS API
+- Better Auth session-based authentication
+- PostgreSQL
+- Timeclock module with PIN, QR, NFC and Face AI verification
+
+Do not rewrite the backend.
+Do not implement a parallel auth system.
+Keep the mobile app aligned with existing API contracts, roles, scopes and tenant rules.
