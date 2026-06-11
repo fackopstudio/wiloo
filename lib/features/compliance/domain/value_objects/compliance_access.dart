@@ -1,3 +1,5 @@
+import '../../../auth/domain/user_role.dart';
+
 class ComplianceAccess {
   const ComplianceAccess({
     required this.canView,
@@ -43,6 +45,25 @@ class ComplianceAccess {
       canDownloadExport = true,
       canMarkSubmitted = true,
       canArchive = true;
+
+  /// Maps a backend role to its Compliance capabilities.
+  ///
+  /// This mirrors backend RBAC for UX/display guards only. The backend remains
+  /// the source of truth and re-enforces access on every request.
+  factory ComplianceAccess.forRole(UserRole? role) {
+    switch (role) {
+      case UserRole.admin:
+      case UserRole.hr:
+        return const ComplianceAccess.readWrite();
+      case UserRole.manager:
+        return const ComplianceAccess.readOnly();
+      case UserRole.employee:
+      case UserRole.supervisor:
+      case UserRole.timeTerminal:
+      case null:
+        return const ComplianceAccess.none();
+    }
+  }
 
   final bool canView;
   final bool canCreatePeriod;

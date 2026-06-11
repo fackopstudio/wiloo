@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/network/dio_provider.dart';
+import '../../../auth/application/session_controller.dart';
 import '../../data/datasources/compliance_remote_data_source.dart';
 import '../../data/repositories/compliance_repository_impl.dart';
 import '../../domain/entities/compliance_dashboard_view.dart';
@@ -13,9 +14,9 @@ import '../../domain/value_objects/compliance_requests.dart';
 import '../../domain/value_objects/declaration_download_result.dart';
 
 final complianceAccessProvider = Provider<ComplianceAccess>((ref) {
-  // TODO(compliance): derive from the backend session once auth bootstrap and
-  // role/scope routing are implemented. Backend RBAC remains authoritative.
-  return const ComplianceAccess.none();
+  // UX/display guard only. Backend RBAC remains the source of truth.
+  final session = ref.watch(sessionControllerProvider);
+  return ComplianceAccess.forRole(session.role);
 });
 
 final complianceRemoteDataSourceProvider = Provider<ComplianceRemoteDataSource>(

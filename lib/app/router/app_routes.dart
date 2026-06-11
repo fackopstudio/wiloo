@@ -1,9 +1,17 @@
 enum AppRoute {
   auth('/auth'),
+  unauthorized('/unauthorized'),
   timeclock('/timeclock'),
   employee('/employee'),
   manager('/manager'),
-  hrAdmin('/hr-admin');
+  hrAdmin('/hr-admin'),
+  compliance('/compliance'),
+  compliancePeriods('/compliance/periods'),
+  complianceDeclarations('/compliance/declarations'),
+  complianceGenerate('/compliance/declarations/generate'),
+  complianceDeclarationDetail('/compliance/declarations/:declarationId'),
+  complianceExport('/compliance/declarations/:declarationId/export'),
+  complianceArchive('/compliance/archive');
 
   const AppRoute(this.path);
 
