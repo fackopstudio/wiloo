@@ -32,6 +32,14 @@ migrate_working_dir/
 .pub/
 /build/
 /coverage/
+build/
+coverage/
+android/.gradle/
+android/local.properties
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+macos/Flutter/ephemeral/
 
 # Symbolication related
 app.*.symbols
