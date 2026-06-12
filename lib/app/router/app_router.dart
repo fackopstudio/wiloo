@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/session_controller.dart';
 import '../../features/auth/domain/session_snapshot.dart';
+import '../../features/auth/domain/user_role.dart';
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/auth/presentation/unauthorized_screen.dart';
 import '../../features/compliance/presentation/pages/compliance_dashboard_page.dart';
@@ -34,6 +35,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     refreshListenable: refreshSignal,
     redirect: (context, state) {
       final session = ref.read(sessionControllerProvider);
+      if (state.uri.path == AppRoute.auth.path && session.isAuthenticated) {
+        return _postLoginLocation(session);
+      }
+
       return complianceRouteRedirect(
         location: state.uri.path,
         session: session,
@@ -114,3 +119,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+String _postLoginLocation(SessionSnapshot session) {
+  if (session.isTerminalSession) {
+    return AppRoute.timeclock.path;
+  }
+
+  return switch (session.role) {
+    UserRole.admin || UserRole.hr => AppRoute.hrAdmin.path,
+    UserRole.manager || UserRole.supervisor => AppRoute.manager.path,
+    UserRole.employee => AppRoute.employee.path,
+    UserRole.timeTerminal => AppRoute.timeclock.path,
+    null => AppRoute.employee.path,
+  };
+}
