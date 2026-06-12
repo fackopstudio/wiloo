@@ -1,0 +1,41 @@
+# Wiloo Compliance UI Rules
+
+Applies to:
+
+```text
+lib/features/compliance/presentation/**
+```
+
+Compliance UI must follow the backend contract and remain a presentation layer only.
+
+Architecture:
+- Flutter widgets must not call APIs directly.
+- Use Riverpod providers/controllers only.
+- Do not put business rules in widgets.
+- Do not modify Compliance data/domain contracts from presentation code.
+
+Role access:
+- `admin` and `hr` can see write actions.
+- `manager` is read-only.
+- `employee`, `supervisor` and `time_terminal` have no Compliance access.
+- UI access checks are UX guards only; backend RBAC remains authoritative.
+
+Compliance product rules:
+- Declarations are preparatory, not official automated submissions.
+- Use wording that clearly says preparatory declarations.
+- Never claim official automated submission.
+- `CNSS`, `CNAMGS` and `IRPP` may be shown as active.
+- `IS` must be disabled or shown as not available yet.
+
+Calculation rules:
+- Do not calculate tax or social amounts in Flutter.
+- Do not hardcode CNSS, CNAMGS or IRPP rates.
+- `MoneyAmount` is display-only.
+- Do not invent fields for raw backend snapshots.
+
+UI rules:
+- Use Material 3 and the existing Wiloo theme.
+- Keep layouts responsive for mobile, tablet and desktop.
+- Include loading, error and empty states.
+- Keep operational HR screens clean, readable and role-aware.
+- Add or update tests when behavior changes.
