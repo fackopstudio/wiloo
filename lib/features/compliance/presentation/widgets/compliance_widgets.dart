@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/error/failure.dart';
+import '../../domain/entities/declaration_export.dart';
+import '../../domain/entities/declaration_period.dart';
 import '../../domain/enums/declaration_status.dart';
 import '../../domain/enums/declaration_type.dart';
+import '../../domain/enums/period_type.dart';
 
 // ── Labels ──────────────────────────────────────────────────────────────────
 
@@ -20,6 +24,76 @@ String typeLabel(DeclarationType type) => switch (type) {
   DeclarationType.irpp => 'IRPP',
   DeclarationType.isTax => 'IS',
 };
+
+String periodTypeLabel(PeriodType type) => switch (type) {
+  PeriodType.monthly => 'Mensuelle',
+  PeriodType.quarterly => 'Trimestrielle',
+  PeriodType.yearly => 'Annuelle',
+};
+
+String formatComplianceDate(DateTime date) =>
+    '${date.day.toString().padLeft(2, '0')}/'
+    '${date.month.toString().padLeft(2, '0')}/'
+    '${date.year}';
+
+String periodLabel(DeclarationPeriod period) {
+  final qualifier = switch (period.periodType) {
+    PeriodType.monthly =>
+      period.month == null ? '${period.year}' : 'M${period.month}',
+    PeriodType.quarterly =>
+      period.quarter == null ? '${period.year}' : 'T${period.quarter}',
+    PeriodType.yearly => '${period.year}',
+  };
+
+  return '${periodTypeLabel(period.periodType)} $qualifier';
+}
+
+String complianceErrorMessage(Object error) {
+  if (error case final Failure failure) {
+    return switch (failure.type) {
+      FailureType.forbidden =>
+        "Accès refusé. Vous n'êtes pas autorisé à effectuer cette action.",
+      FailureType.invalidStateTransition =>
+        "Action impossible dans l'état actuel de la déclaration.",
+      FailureType.network =>
+        'Connexion au serveur impossible. Vérifiez votre réseau.',
+      FailureType.decoding =>
+        'Réponse backend inattendue. Les données doivent être vérifiées.',
+      FailureType.server => failure.message,
+      FailureType.unknown => failure.message,
+    };
+  }
+
+  return 'Une erreur inattendue est survenue.';
+}
+
+void showComplianceSnackBar(
+  BuildContext context,
+  String message, {
+  bool isError = false,
+}) {
+  final messenger = ScaffoldMessenger.of(context);
+  messenger.hideCurrentSnackBar();
+  messenger.showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: isError
+          ? Theme.of(context).colorScheme.error
+          : Theme.of(context).snackBarTheme.backgroundColor,
+    ),
+  );
+}
+
+String? exportIdFromRaw(DeclarationExport export) {
+  for (final key in const ['id', 'exportId']) {
+    final value = export.raw[key];
+    if (value is String && value.isNotEmpty) {
+      return value;
+    }
+  }
+
+  return null;
+}
 
 Color statusChipColor(BuildContext context, DeclarationStatus status) {
   final cs = Theme.of(context).colorScheme;

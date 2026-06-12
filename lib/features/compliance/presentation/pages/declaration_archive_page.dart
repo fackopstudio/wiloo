@@ -15,6 +15,7 @@ class DeclarationArchivePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Uses the confirmed list route filtered to ARCHIVED – no separate endpoint.
+    final access = ref.watch(complianceAccessProvider);
     final archivedAsync = ref.watch(
       declarationsProvider(
         const ListDeclarationsQuery(status: DeclarationStatus.archived),
@@ -23,21 +24,31 @@ class DeclarationArchivePage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Archives')),
-      body: archivedAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (_, _) => ComplianceErrorState(
-          message: 'Impossible de charger les archives.',
-          onRetry: () => ref.invalidate(
-            declarationsProvider(
-              const ListDeclarationsQuery(status: DeclarationStatus.archived),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (access.isReadOnly) const ComplianceReadOnlyBanner(),
+          Expanded(
+            child: archivedAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => ComplianceErrorState(
+                message: complianceErrorMessage(error),
+                onRetry: () => ref.invalidate(
+                  declarationsProvider(
+                    const ListDeclarationsQuery(
+                      status: DeclarationStatus.archived,
+                    ),
+                  ),
+                ),
+              ),
+              data: (declarations) => declarations.isEmpty
+                  ? const ComplianceEmptyState(
+                      message: 'Aucune déclaration archivée.',
+                    )
+                  : _ArchiveList(declarations: declarations),
             ),
           ),
-        ),
-        data: (declarations) => declarations.isEmpty
-            ? const ComplianceEmptyState(
-                message: 'Aucune déclaration archivée.',
-              )
-            : _ArchiveList(declarations: declarations),
+        ],
       ),
     );
   }
@@ -76,7 +87,9 @@ class _ArchiveTile extends StatelessWidget {
         title: Text(
           '${typeLabel(declaration.type)} – ${declaration.createdAt.year}',
         ),
-        subtitle: Text('Archivée le ${_formatDate(declaration.updatedAt)}'),
+        subtitle: Text(
+          'Archivée le ${formatComplianceDate(declaration.updatedAt)}',
+        ),
         trailing: const ComplianceStatusChip(DeclarationStatus.archived),
         onTap: () => context.goNamed(
           AppRoute.complianceDeclarationDetail.name,
@@ -85,9 +98,4 @@ class _ArchiveTile extends StatelessWidget {
       ),
     );
   }
-
-  String _formatDate(DateTime date) =>
-      '${date.day.toString().padLeft(2, '0')}/'
-      '${date.month.toString().padLeft(2, '0')}/'
-      '${date.year}';
 }

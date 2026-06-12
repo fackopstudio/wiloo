@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../domain/entities/declaration_export.dart';
 import '../../domain/enums/export_format.dart';
+import '../../domain/value_objects/compliance_requests.dart';
+import '../../domain/value_objects/declaration_transition.dart';
 import '../providers/compliance_providers.dart';
 import '../widgets/compliance_widgets.dart';
 
@@ -17,12 +20,24 @@ class DeclarationExportPage extends ConsumerStatefulWidget {
 
 class _DeclarationExportPageState extends ConsumerState<DeclarationExportPage> {
   ExportFormat _selectedFormat = ExportFormat.pdf;
+  DeclarationExport? _lastExport;
+  String? _lastExportId;
 
   @override
   Widget build(BuildContext context) {
+    final access = ref.watch(complianceAccessProvider);
     final declarationAsync = ref.watch(
       declarationDetailProvider(widget.declarationId),
     );
+    final statusAllowsExport = declarationAsync.maybeWhen(
+      data: (declaration) => DeclarationTransition.canApply(
+        DeclarationAction.export,
+        declaration.status,
+      ),
+      orElse: () => false,
+    );
+    final exportState = ref.watch(exportDeclarationControllerProvider);
+    final downloadState = ref.watch(downloadExportControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Exporter la déclaration')),
@@ -39,39 +54,92 @@ class _DeclarationExportPageState extends ConsumerState<DeclarationExportPage> {
               children: [
                 const CompliancePreparatoryNotice(),
                 const SizedBox(height: 8),
-                _ExportDisclaimer(),
+                const _ExportDisclaimer(),
                 const ComplianceSectionTitle('Déclaration'),
                 declarationAsync.when(
                   loading: () => const Padding(
                     padding: EdgeInsets.symmetric(vertical: 16),
                     child: Center(child: CircularProgressIndicator()),
                   ),
-                  error: (_, _) => ComplianceErrorState(
-                    message: 'Impossible de charger la déclaration.',
+                  error: (error, _) => ComplianceErrorState(
+                    message: complianceErrorMessage(error),
                     onRetry: () => ref.invalidate(
                       declarationDetailProvider(widget.declarationId),
                     ),
                   ),
-                  data: (declaration) => Card(
-                    elevation: 0,
-                    child: ListTile(
-                      leading: ComplianceTypeChip(declaration.type),
-                      title: Text(typeLabel(declaration.type)),
-                      subtitle: Text(
-                        'Statut : ${statusLabel(declaration.status)}',
-                      ),
-                      trailing: ComplianceStatusChip(declaration.status),
-                    ),
+                  data: (declaration) {
+                    final statusAllowsExport = DeclarationTransition.canApply(
+                      DeclarationAction.export,
+                      declaration.status,
+                    );
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Card(
+                          elevation: 0,
+                          child: ListTile(
+                            leading: ComplianceTypeChip(declaration.type),
+                            title: Text(typeLabel(declaration.type)),
+                            subtitle: Text(
+                              'Statut : ${statusLabel(declaration.status)}',
+                            ),
+                            trailing: ComplianceStatusChip(declaration.status),
+                          ),
+                        ),
+                        if (!access.canExport)
+                          const ComplianceErrorState(
+                            message:
+                                "Accès refusé. Vous n'êtes pas autorisé à exporter.",
+                          )
+                        else if (!statusAllowsExport)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              "L'état actuel ne permet pas l'export. Le backend confirmera la transition autorisée.",
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
+                ),
+                if (access.canExport) ...[
+                  const ComplianceSectionTitle('Format'),
+                  ..._formatRows(exportState.isLoading),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: exportState.isLoading || !statusAllowsExport
+                        ? null
+                        : () => _requestExport(context),
+                    icon: exportState.isLoading
+                        ? const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.download_outlined),
+                    label: const Text('Générer le document préparatoire'),
                   ),
-                ),
-                const ComplianceSectionTitle('Format'),
-                ..._formatRows(),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () => _requestExport(context),
-                  icon: const Icon(Icons.download_outlined),
-                  label: const Text('Générer le document préparatoire'),
-                ),
+                ],
+                if (_lastExport != null) ...[
+                  const ComplianceSectionTitle('Export généré'),
+                  _GeneratedExportCard(
+                    export: _lastExport!,
+                    exportId: _lastExportId,
+                    isDownloading: downloadState.isLoading,
+                    onDownload:
+                        access.canDownloadExport &&
+                            _lastExportId != null &&
+                            !downloadState.isLoading
+                        ? () => _downloadExport(context, _lastExportId!)
+                        : null,
+                  ),
+                ],
                 const SizedBox(height: 16),
               ],
             ),
@@ -81,7 +149,7 @@ class _DeclarationExportPageState extends ConsumerState<DeclarationExportPage> {
     );
   }
 
-  List<Widget> _formatRows() {
+  List<Widget> _formatRows(bool disabled) {
     final cs = Theme.of(context).colorScheme;
     return ExportFormat.values.map((format) {
       final label = switch (format) {
@@ -101,7 +169,9 @@ class _DeclarationExportPageState extends ConsumerState<DeclarationExportPage> {
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => setState(() => _selectedFormat = format),
+          onTap: disabled
+              ? null
+              : () => setState(() => _selectedFormat = format),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
@@ -122,12 +192,146 @@ class _DeclarationExportPageState extends ConsumerState<DeclarationExportPage> {
     }).toList();
   }
 
-  void _requestExport(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Export ${_selectedFormat.apiValue} demandé : '
-          'sera connecté au backend.',
+  Future<void> _requestExport(BuildContext context) async {
+    await ref
+        .read(exportDeclarationControllerProvider.notifier)
+        .export(
+          widget.declarationId,
+          ExportDeclarationRequest(format: _selectedFormat),
+        );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    ref
+        .read(exportDeclarationControllerProvider)
+        .when(
+          data: (declarationExport) {
+            if (declarationExport == null) {
+              showComplianceSnackBar(
+                context,
+                'Export terminé, mais aucune référence exploitable n’a été retournée.',
+                isError: true,
+              );
+              ref.invalidate(declarationDetailProvider(widget.declarationId));
+              return;
+            }
+
+            final exportId = exportIdFromRaw(declarationExport);
+            setState(() {
+              _lastExport = declarationExport;
+              _lastExportId = exportId;
+            });
+
+            if (exportId == null) {
+              showComplianceSnackBar(
+                context,
+                "Export généré, mais l'identifiant de téléchargement n'est pas confirmé par le snapshot backend.",
+                isError: true,
+              );
+              ref.invalidate(declarationDetailProvider(widget.declarationId));
+              return;
+            }
+
+            showComplianceSnackBar(
+              context,
+              'Export généré. Le téléchargement est disponible.',
+            );
+          },
+          error: (error, _) => showComplianceSnackBar(
+            context,
+            complianceErrorMessage(error),
+            isError: true,
+          ),
+          loading: () {},
+        );
+  }
+
+  Future<void> _downloadExport(BuildContext context, String exportId) async {
+    await ref
+        .read(downloadExportControllerProvider.notifier)
+        .download(widget.declarationId, exportId);
+
+    if (!context.mounted) {
+      return;
+    }
+
+    ref
+        .read(downloadExportControllerProvider)
+        .when(
+          data: (download) {
+            if (download == null) {
+              return;
+            }
+            showComplianceSnackBar(
+              context,
+              'Fichier reçu : ${download.fileName} (${download.contentType}, ${download.bytes.length} octets).',
+            );
+          },
+          error: (error, _) => showComplianceSnackBar(
+            context,
+            complianceErrorMessage(error),
+            isError: true,
+          ),
+          loading: () {},
+        );
+  }
+}
+
+class _GeneratedExportCard extends StatelessWidget {
+  const _GeneratedExportCard({
+    required this.export,
+    required this.exportId,
+    required this.isDownloading,
+    required this.onDownload,
+  });
+
+  final DeclarationExport export;
+  final String? exportId;
+  final bool isDownloading;
+  final VoidCallback? onDownload;
+
+  @override
+  Widget build(BuildContext context) {
+    final idText = exportId == null
+        ? 'Identifiant indisponible dans le snapshot backend'
+        : 'Export ID : $exportId';
+
+    return Card(
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              idText,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              export.raw.isEmpty
+                  ? 'Snapshot backend vide.'
+                  : 'Snapshot backend conservé sans champs inventés.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: onDownload,
+              icon: isDownloading
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.file_download_outlined),
+              label: const Text('Télécharger'),
+            ),
+          ],
         ),
       ),
     );
@@ -135,6 +339,8 @@ class _DeclarationExportPageState extends ConsumerState<DeclarationExportPage> {
 }
 
 class _ExportDisclaimer extends StatelessWidget {
+  const _ExportDisclaimer();
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;

@@ -6,6 +6,7 @@ import '../../../../app/router/app_routes.dart';
 import '../../domain/entities/social_fiscal_declaration.dart';
 import '../../domain/enums/declaration_status.dart';
 import '../../domain/value_objects/compliance_access.dart';
+import '../../domain/value_objects/compliance_requests.dart';
 import '../../domain/value_objects/declaration_transition.dart';
 import '../providers/compliance_providers.dart';
 import '../widgets/compliance_widgets.dart';
@@ -88,7 +89,7 @@ class _DetailBody extends StatelessWidget {
         // Action bar (admin/hr only)
         if (!access.isReadOnly) ...[
           const ComplianceSectionTitle('Actions'),
-          _ActionBar(declaration: declaration),
+          _ActionBar(declaration: declaration, access: access),
         ],
 
         const SizedBox(height: 24),
@@ -287,51 +288,69 @@ class _TotalsCard extends StatelessWidget {
 
 // ── Action Bar ───────────────────────────────────────────────────────────────
 
-class _ActionBar extends StatelessWidget {
-  const _ActionBar({required this.declaration});
+class _ActionBar extends ConsumerWidget {
+  const _ActionBar({required this.declaration, required this.access});
 
   final SocialFiscalDeclaration declaration;
+  final ComplianceAccess access;
 
-  bool _can(DeclarationAction action) =>
-      DeclarationTransition.canApply(action, declaration.status);
+  bool _can(DeclarationAction action) {
+    final allowedByRole = switch (action) {
+      DeclarationAction.markReady => access.canMarkReady,
+      DeclarationAction.validate => access.canValidate,
+      DeclarationAction.export => access.canExport,
+      DeclarationAction.markSubmitted => access.canMarkSubmitted,
+      DeclarationAction.archive => access.canArchive,
+    };
+
+    return allowedByRole &&
+        DeclarationTransition.canApply(action, declaration.status);
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isBusy =
+        ref.watch(markReadyControllerProvider).isLoading ||
+        ref.watch(validateDeclarationControllerProvider).isLoading ||
+        ref.watch(markSubmittedControllerProvider).isLoading ||
+        ref.watch(archiveDeclarationControllerProvider).isLoading;
+
     return Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
         if (_can(DeclarationAction.markReady))
           OutlinedButton.icon(
-            onPressed: () => _placeholder(context, 'Marquer comme prêt'),
+            onPressed: isBusy ? null : () => _markReady(context, ref),
             icon: const Icon(Icons.check_outlined),
             label: const Text('Marquer prêt'),
           ),
         if (_can(DeclarationAction.validate))
           FilledButton.icon(
-            onPressed: () => _placeholder(context, 'Valider'),
+            onPressed: isBusy ? null : () => _validate(context, ref),
             icon: const Icon(Icons.verified_outlined),
             label: const Text('Valider'),
           ),
         if (_can(DeclarationAction.export))
           OutlinedButton.icon(
-            onPressed: () => context.goNamed(
-              AppRoute.complianceExport.name,
-              pathParameters: {'declarationId': declaration.id},
-            ),
+            onPressed: isBusy
+                ? null
+                : () => context.goNamed(
+                    AppRoute.complianceExport.name,
+                    pathParameters: {'declarationId': declaration.id},
+                  ),
             icon: const Icon(Icons.download_outlined),
             label: const Text('Exporter'),
           ),
         if (_can(DeclarationAction.markSubmitted))
           OutlinedButton.icon(
-            onPressed: () =>
-                _placeholder(context, 'Marquer comme transmis manuellement'),
+            onPressed: isBusy ? null : () => _markSubmitted(context, ref),
             icon: const Icon(Icons.send_outlined),
             label: const Text('Transmis manuellement'),
           ),
         if (_can(DeclarationAction.archive))
           TextButton.icon(
-            onPressed: () => _placeholder(context, 'Archiver'),
+            onPressed: isBusy ? null : () => _archive(context, ref),
             icon: const Icon(Icons.archive_outlined),
             label: const Text('Archiver'),
           ),
@@ -339,9 +358,292 @@ class _ActionBar extends StatelessWidget {
     );
   }
 
-  void _placeholder(BuildContext context, String action) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$action : sera connecté au backend.')),
+  Future<void> _markReady(BuildContext context, WidgetRef ref) async {
+    await ref
+        .read(markReadyControllerProvider.notifier)
+        .markReady(declaration.id);
+    if (!context.mounted) {
+      return;
+    }
+    _handleDeclarationCommand(
+      context,
+      ref.read(markReadyControllerProvider),
+      successMessage: 'Déclaration marquée prête à vérifier.',
     );
   }
+
+  Future<void> _validate(BuildContext context, WidgetRef ref) async {
+    final confirmed = await _confirm(
+      context,
+      title: 'Valider la déclaration ?',
+      message:
+          'Cette validation humaine confirme la déclaration préparatoire avant export. Le backend reste la source de vérité.',
+      actionLabel: 'Valider',
+    );
+    if (!confirmed || !context.mounted) {
+      return;
+    }
+
+    await ref
+        .read(validateDeclarationControllerProvider.notifier)
+        .validate(declaration.id);
+    if (!context.mounted) {
+      return;
+    }
+    _handleDeclarationCommand(
+      context,
+      ref.read(validateDeclarationControllerProvider),
+      successMessage: 'Déclaration validée.',
+    );
+  }
+
+  Future<void> _markSubmitted(BuildContext context, WidgetRef ref) async {
+    final request = await showDialog<MarkSubmittedDeclarationRequest>(
+      context: context,
+      builder: (_) => const _MarkSubmittedDialog(),
+    );
+    if (request == null || !context.mounted) {
+      return;
+    }
+
+    await ref
+        .read(markSubmittedControllerProvider.notifier)
+        .markSubmitted(declaration.id, request);
+    if (!context.mounted) {
+      return;
+    }
+    _handleDeclarationCommand(
+      context,
+      ref.read(markSubmittedControllerProvider),
+      successMessage: 'Transmission manuelle enregistrée.',
+    );
+  }
+
+  Future<void> _archive(BuildContext context, WidgetRef ref) async {
+    final request = await showDialog<ArchiveDeclarationRequest>(
+      context: context,
+      builder: (_) => const _ArchiveDialog(),
+    );
+    if (request == null || !context.mounted) {
+      return;
+    }
+
+    await ref
+        .read(archiveDeclarationControllerProvider.notifier)
+        .archive(declaration.id, request);
+    if (!context.mounted) {
+      return;
+    }
+    _handleDeclarationCommand(
+      context,
+      ref.read(archiveDeclarationControllerProvider),
+      successMessage: 'Déclaration archivée.',
+    );
+  }
+
+  Future<bool> _confirm(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String actionLabel,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(actionLabel),
+          ),
+        ],
+      ),
+    );
+
+    return confirmed ?? false;
+  }
+
+  void _handleDeclarationCommand(
+    BuildContext context,
+    AsyncValue<SocialFiscalDeclaration?> state, {
+    required String successMessage,
+  }) {
+    state.when(
+      data: (updated) {
+        if (updated == null) {
+          return;
+        }
+        showComplianceSnackBar(context, successMessage);
+      },
+      error: (error, _) => showComplianceSnackBar(
+        context,
+        complianceErrorMessage(error),
+        isError: true,
+      ),
+      loading: () {},
+    );
+  }
+}
+
+class _MarkSubmittedDialog extends StatefulWidget {
+  const _MarkSubmittedDialog();
+
+  @override
+  State<_MarkSubmittedDialog> createState() => _MarkSubmittedDialogState();
+}
+
+class _MarkSubmittedDialogState extends State<_MarkSubmittedDialog> {
+  final _notesController = TextEditingController();
+  DateTime? _submittedAt = DateTime.now();
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Marquer comme transmis manuellement ?'),
+      content: SizedBox(
+        width: 480,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Cette action enregistre une transmission manuelle. Elle ne déclenche aucune télétransmission officielle.',
+            ),
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: _pickSubmittedAt,
+              icon: const Icon(Icons.event_outlined),
+              label: Text(
+                _submittedAt == null
+                    ? 'Date de transmission : non renseignée'
+                    : 'Date de transmission : ${formatComplianceDate(_submittedAt!)}',
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => setState(() => _submittedAt = null),
+                child: const Text('Retirer la date'),
+              ),
+            ),
+            TextField(
+              controller: _notesController,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'Notes',
+                hintText: 'Optionnel',
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop(
+              MarkSubmittedDeclarationRequest(
+                submittedAt: _submittedAt,
+                notes: _emptyToNull(_notesController.text),
+              ),
+            );
+          },
+          child: const Text('Enregistrer'),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickSubmittedAt() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _submittedAt ?? DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() => _submittedAt = picked);
+    }
+  }
+}
+
+class _ArchiveDialog extends StatefulWidget {
+  const _ArchiveDialog();
+
+  @override
+  State<_ArchiveDialog> createState() => _ArchiveDialogState();
+}
+
+class _ArchiveDialogState extends State<_ArchiveDialog> {
+  final _reasonController = TextEditingController();
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Archiver la déclaration ?'),
+      content: SizedBox(
+        width: 480,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'La déclaration restera consultable en archive. Aucun rétablissement n’est proposé tant que le backend ne le supporte pas.',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _reasonController,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'Motif',
+                hintText: 'Optionnel',
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Annuler'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop(
+              ArchiveDeclarationRequest(
+                reason: _emptyToNull(_reasonController.text),
+              ),
+            );
+          },
+          child: const Text('Archiver'),
+        ),
+      ],
+    );
+  }
+}
+
+String? _emptyToNull(String value) {
+  final trimmed = value.trim();
+  return trimmed.isEmpty ? null : trimmed;
 }
