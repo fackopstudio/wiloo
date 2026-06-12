@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/application/session_controller.dart';
+import '../../features/auth/domain/session_snapshot.dart';
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/auth/presentation/unauthorized_screen.dart';
 import '../../features/compliance/presentation/pages/compliance_dashboard_page.dart';
@@ -19,8 +21,17 @@ import 'app_routes.dart';
 import 'compliance_route_guard.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  // Bridges Riverpod session changes to go_router so login/logout/expiry all
+  // refresh redirects. Redirect logic stays centralized here (never in widgets).
+  final refreshSignal = ValueNotifier<int>(0);
+  ref.listen<SessionSnapshot>(sessionControllerProvider, (previous, next) {
+    refreshSignal.value++;
+  });
+  ref.onDispose(refreshSignal.dispose);
+
   return GoRouter(
     initialLocation: AppRoute.timeclock.path,
+    refreshListenable: refreshSignal,
     redirect: (context, state) {
       final session = ref.read(sessionControllerProvider);
       return complianceRouteRedirect(

@@ -51,6 +51,8 @@ String periodLabel(DeclarationPeriod period) {
 String complianceErrorMessage(Object error) {
   if (error case final Failure failure) {
     return switch (failure.type) {
+      FailureType.unauthorized =>
+        'Session expirée. Veuillez vous reconnecter.',
       FailureType.forbidden =>
         "Accès refusé. Vous n'êtes pas autorisé à effectuer cette action.",
       FailureType.invalidStateTransition =>

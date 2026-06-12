@@ -1,5 +1,6 @@
 enum FailureType {
   invalidStateTransition,
+  unauthorized,
   forbidden,
   network,
   server,
@@ -20,6 +21,12 @@ class Failure implements Exception {
     this.statusCode = 400,
     this.cause,
   }) : type = FailureType.invalidStateTransition;
+
+  const Failure.unauthorized({
+    this.message = 'Authentication required.',
+    this.statusCode = 401,
+    this.cause,
+  }) : type = FailureType.unauthorized;
 
   const Failure.forbidden({
     this.message = 'You are not allowed to perform this action.',
