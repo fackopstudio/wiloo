@@ -20,7 +20,10 @@ void main() {
           role: UserRole.admin,
         ),
       );
-      final repo = AuthRepositoryImpl(remoteDataSource: remote, tokenStore: store);
+      final repo = AuthRepositoryImpl(
+        remoteDataSource: remote,
+        tokenStore: store,
+      );
 
       final snapshot = await repo.signIn('a@b.com', 'pw');
 
@@ -34,12 +37,19 @@ void main() {
       final remote = _FakeRemote(
         signInResult: const AuthSignInResult(token: null),
       );
-      final repo = AuthRepositoryImpl(remoteDataSource: remote, tokenStore: store);
+      final repo = AuthRepositoryImpl(
+        remoteDataSource: remote,
+        tokenStore: store,
+      );
 
       await expectLater(
         repo.signIn('a@b.com', 'pw'),
         throwsA(
-          isA<Failure>().having((f) => f.type, 'type', FailureType.unauthorized),
+          isA<Failure>().having(
+            (f) => f.type,
+            'type',
+            FailureType.unauthorized,
+          ),
         ),
       );
     });
@@ -55,12 +65,19 @@ void main() {
           ),
         ),
       );
-      final repo = AuthRepositoryImpl(remoteDataSource: remote, tokenStore: store);
+      final repo = AuthRepositoryImpl(
+        remoteDataSource: remote,
+        tokenStore: store,
+      );
 
       await expectLater(
         repo.signIn('a@b.com', 'bad'),
         throwsA(
-          isA<Failure>().having((f) => f.type, 'type', FailureType.unauthorized),
+          isA<Failure>().having(
+            (f) => f.type,
+            'type',
+            FailureType.unauthorized,
+          ),
         ),
       );
     });
@@ -73,7 +90,10 @@ void main() {
           role: UserRole.hr,
         ),
       );
-      final repo = AuthRepositoryImpl(remoteDataSource: remote, tokenStore: store);
+      final repo = AuthRepositoryImpl(
+        remoteDataSource: remote,
+        tokenStore: store,
+      );
 
       final snapshot = await repo.bootstrapSession();
 
@@ -177,7 +197,10 @@ void main() {
     test('logout clears token', () async {
       final store = InMemoryTokenStore('tok');
       final remote = _FakeRemote();
-      final repo = AuthRepositoryImpl(remoteDataSource: remote, tokenStore: store);
+      final repo = AuthRepositoryImpl(
+        remoteDataSource: remote,
+        tokenStore: store,
+      );
 
       await repo.logout();
 

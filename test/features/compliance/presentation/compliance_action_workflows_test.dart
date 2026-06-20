@@ -11,6 +11,7 @@ import 'package:wiloo/features/auth/application/session_controller.dart';
 import 'package:wiloo/features/auth/domain/session_snapshot.dart';
 import 'package:wiloo/features/auth/domain/user_role.dart';
 import 'package:wiloo/features/compliance/domain/entities/declaration_export.dart';
+import 'package:wiloo/features/compliance/domain/entities/declaration_line.dart';
 import 'package:wiloo/features/compliance/domain/entities/declaration_period.dart';
 import 'package:wiloo/features/compliance/domain/entities/social_fiscal_declaration.dart';
 import 'package:wiloo/features/compliance/domain/enums/declaration_status.dart';
@@ -209,6 +210,107 @@ void main() {
   });
 
   group('DeclarationDetailPage', () {
+    testWidgets('lines section is displayed when lines exist', (tester) async {
+      await tester.pumpWidget(
+        _testApp(
+          role: UserRole.admin,
+          repository: _FakeComplianceRepository(
+            declaration: _declaration(lines: [_declarationLine()]),
+          ),
+          child: const DeclarationDetailPage(declarationId: 'decl-1'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollToDeclarationLines(tester);
+
+      expect(find.text('Lignes de déclaration'), findsOneWidget);
+      expect(find.text('Smoke Employee'), findsOneWidget);
+      expect(find.textContaining('Référence : emp-1'), findsOneWidget);
+      expect(find.textContaining('smoke.employee@wiloo.test'), findsOneWidget);
+    });
+
+    testWidgets('empty state is displayed when no lines exist', (tester) async {
+      await tester.pumpWidget(
+        _testApp(
+          role: UserRole.admin,
+          repository: _FakeComplianceRepository(
+            declaration: _declaration(lines: const []),
+          ),
+          child: const DeclarationDetailPage(declarationId: 'decl-1'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollToDeclarationLines(tester);
+
+      expect(find.text('Lignes de déclaration'), findsOneWidget);
+      expect(
+        find.textContaining('Aucune ligne de déclaration retournée'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('MoneyAmount display values are rendered as-is', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _testApp(
+          role: UserRole.admin,
+          repository: _FakeComplianceRepository(
+            declaration: _declaration(
+              lines: [
+                _declarationLine(
+                  grossSalary: '450000.00',
+                  taxableSalary: '399999.50',
+                  employeeContributionAmount: '12345.67',
+                  withholdingAmount: '7654.32',
+                ),
+              ],
+            ),
+          ),
+          child: const DeclarationDetailPage(declarationId: 'decl-1'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollToDeclarationLines(tester);
+
+      expect(find.text('450000.00'), findsOneWidget);
+      expect(find.text('399999.50'), findsOneWidget);
+      expect(find.text('12345.67'), findsOneWidget);
+      expect(find.text('7654.32'), findsOneWidget);
+    });
+
+    testWidgets('warnings attached to lines are visible if available', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _testApp(
+          role: UserRole.admin,
+          repository: _FakeComplianceRepository(
+            declaration: _declaration(
+              lines: [
+                _declarationLine(
+                  warnings: const ['Missing validated payroll for employee.'],
+                ),
+              ],
+            ),
+          ),
+          child: const DeclarationDetailPage(declarationId: 'decl-1'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await _scrollToDeclarationLines(tester);
+
+      expect(find.text('Anomalies ligne'), findsOneWidget);
+      expect(
+        find.textContaining('Missing validated payroll for employee.'),
+        findsOneWidget,
+      );
+    });
+
     testWidgets('action buttons follow declaration transitions', (
       tester,
     ) async {
@@ -375,6 +477,45 @@ void main() {
       expect(repository.downloadedExportId, 'export-1');
       expect(find.textContaining('declaration.pdf'), findsOneWidget);
       expect(find.textContaining('application/pdf'), findsOneWidget);
+    });
+
+    testWidgets('composite export payload enables download', (tester) async {
+      final repository = _FakeComplianceRepository(
+        declaration: _declaration(status: DeclarationStatus.validated),
+        export: const DeclarationExport(
+          raw: {
+            'declaration': {'id': 'decl-1'},
+            'export': {'id': 'export-99', 'format': 'PDF'},
+            'download': {
+              'exportId': 'export-99',
+              'mimeType': 'application/pdf',
+            },
+          },
+        ),
+      );
+
+      await tester.pumpWidget(
+        _testApp(
+          role: UserRole.admin,
+          repository: repository,
+          child: const DeclarationExportPage(declarationId: 'decl-1'),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await _tapVisible(
+        tester,
+        find.widgetWithText(FilledButton, 'Générer le document préparatoire'),
+      );
+      await tester.pumpAndSettle();
+      await _tapVisible(
+        tester,
+        find.widgetWithText(OutlinedButton, 'Télécharger'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(repository.downloadedExportId, 'export-99');
+      expect(find.textContaining('Export ID : export-99'), findsOneWidget);
     });
 
     testWidgets('missing exportId shows fallback message', (tester) async {
@@ -555,6 +696,15 @@ Future<void> _scrollToActions(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
+Future<void> _scrollToDeclarationLines(WidgetTester tester) async {
+  await tester.scrollUntilVisible(
+    find.text('Lignes de déclaration'),
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+}
+
 class _FakeComplianceRepository implements ComplianceRepository {
   _FakeComplianceRepository({
     List<DeclarationPeriod>? periods,
@@ -722,6 +872,7 @@ final _period = DeclarationPeriod(
 SocialFiscalDeclaration _declaration({
   DeclarationStatus status = DeclarationStatus.readyToReview,
   DeclarationType type = DeclarationType.cnss,
+  List<DeclarationLine>? lines,
 }) {
   return SocialFiscalDeclaration(
     id: 'decl-1',
@@ -734,8 +885,38 @@ SocialFiscalDeclaration _declaration({
     totalEmployeeContributions: MoneyAmount.fromApi('100'),
     totalEmployerContributions: MoneyAmount.fromApi('150'),
     totalWithholdings: MoneyAmount.fromApi('50'),
+    lines: lines,
     createdAt: _now,
     updatedAt: _now,
+  );
+}
+
+DeclarationLine _declarationLine({
+  String grossSalary = '1000.00',
+  String taxableSalary = '900.00',
+  String socialContributionBase = '850.00',
+  String employeeContributionAmount = '100.00',
+  String employerContributionAmount = '150.00',
+  String withholdingAmount = '50.00',
+  List<String>? warnings,
+}) {
+  return DeclarationLine(
+    raw: const {'id': 'line-1'},
+    id: 'line-1',
+    employeeId: 'emp-1',
+    userId: 'user-1',
+    employeeSnapshot: const {
+      'name': 'Smoke Employee',
+      'email': 'smoke.employee@wiloo.test',
+      'employeeId': 'emp-1',
+    },
+    grossSalary: MoneyAmount.fromApi(grossSalary),
+    taxableSalary: MoneyAmount.fromApi(taxableSalary),
+    socialContributionBase: MoneyAmount.fromApi(socialContributionBase),
+    employeeContributionAmount: MoneyAmount.fromApi(employeeContributionAmount),
+    employerContributionAmount: MoneyAmount.fromApi(employerContributionAmount),
+    withholdingAmount: MoneyAmount.fromApi(withholdingAmount),
+    warnings: warnings,
   );
 }
 

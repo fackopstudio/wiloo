@@ -5,6 +5,7 @@ import '../../domain/entities/declaration_period.dart';
 import '../../domain/entities/social_fiscal_declaration.dart';
 import '../../domain/enums/declaration_status.dart';
 import '../../domain/enums/declaration_type.dart';
+import '../../domain/enums/export_format.dart';
 import '../../domain/enums/period_type.dart';
 import '../../domain/value_objects/compliance_requests.dart';
 import '../../domain/value_objects/declaration_download_result.dart';
@@ -83,11 +84,54 @@ extension SocialFiscalDeclarationDtoMapper on SocialFiscalDeclarationDto {
 }
 
 extension DeclarationLineDtoMapper on DeclarationLineDto {
-  DeclarationLine toDomain() => DeclarationLine(raw: raw);
+  DeclarationLine toDomain() {
+    return DeclarationLine(
+      raw: raw,
+      id: id,
+      declarationId: declarationId,
+      employeeId: employeeId,
+      payrollId: payrollId,
+      userId: userId,
+      employeeSnapshot: employeeSnapshot,
+      contractSnapshot: contractSnapshot,
+      companySnapshot: companySnapshot,
+      grossSalary: _optionalMoney(grossSalary),
+      taxableSalary: _optionalMoney(taxableSalary),
+      socialContributionBase: socialContributionBase == null
+          ? null
+          : _optionalMoney(socialContributionBase),
+      employeeContributionAmount: employeeContributionAmount == null
+          ? null
+          : _optionalMoney(employeeContributionAmount),
+      employerContributionAmount: employerContributionAmount == null
+          ? null
+          : _optionalMoney(employerContributionAmount),
+      withholdingAmount: _optionalMoney(withholdingAmount),
+      deductionsSnapshot: deductionsSnapshot,
+      benefitsInKindSnapshot: benefitsInKindSnapshot,
+      calculationDetails: calculationDetails,
+      warnings: warnings,
+      createdAt: _parseOptionalDate(createdAt),
+      updatedAt: _parseOptionalDate(updatedAt),
+    );
+  }
 }
 
 extension DeclarationExportDtoMapper on DeclarationExportDto {
-  DeclarationExport toDomain() => DeclarationExport(raw: raw);
+  DeclarationExport toDomain() {
+    return DeclarationExport(
+      raw: raw,
+      id: id,
+      declarationId: declarationId,
+      format: format == null ? null : _exportFormatFromApi(format!),
+      fileName: fileName,
+      storageKey: storageKey,
+      checksum: checksum,
+      generatedBy: generatedBy,
+      generatedAt: _parseOptionalDate(generatedAt),
+      status: status,
+    );
+  }
 }
 
 extension DeclarationAttachmentDtoMapper on DeclarationAttachmentDto {
@@ -199,6 +243,13 @@ DateTime? _parseOptionalDate(String? value) {
   return DateTime.parse(value);
 }
 
+MoneyAmount? _optionalMoney(Object? value) {
+  if (value == null) {
+    return null;
+  }
+  return MoneyAmount.fromApi(value);
+}
+
 DeclarationType _declarationTypeFromApi(String value) {
   return DeclarationType.values.firstWhere((type) => type.apiValue == value);
 }
@@ -211,4 +262,8 @@ DeclarationStatus _statusFromApi(String value) {
 
 PeriodType _periodTypeFromApi(String value) {
   return PeriodType.values.firstWhere((type) => type.apiValue == value);
+}
+
+ExportFormat _exportFormatFromApi(String value) {
+  return ExportFormat.values.firstWhere((format) => format.apiValue == value);
 }

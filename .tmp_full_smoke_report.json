@@ -1,0 +1,143 @@
+{
+  "environment": {
+    "api_root": 404
+  },
+  "auth_matrix": {
+    "admin": {
+      "signin_status": 200,
+      "set_auth_token_received": true,
+      "get_session_status": 200,
+      "mapped_role": "admin",
+      "tenant_id": "smoke-tenant",
+      "scope": "BACKOFFICE"
+    },
+    "hr": {
+      "signin_status": 200,
+      "set_auth_token_received": true,
+      "get_session_status": 200,
+      "mapped_role": "hr",
+      "tenant_id": "smoke-tenant",
+      "scope": "BACKOFFICE"
+    },
+    "manager": {
+      "signin_status": 200,
+      "set_auth_token_received": true,
+      "get_session_status": 200,
+      "mapped_role": "manager",
+      "tenant_id": "smoke-tenant",
+      "scope": "BACKOFFICE"
+    },
+    "employee": {
+      "signin_status": 200,
+      "set_auth_token_received": true,
+      "get_session_status": 200,
+      "mapped_role": "employee",
+      "tenant_id": "smoke-tenant",
+      "scope": "BACKOFFICE"
+    },
+    "supervisor": {
+      "signin_status": 200,
+      "set_auth_token_received": true,
+      "get_session_status": 200,
+      "mapped_role": "supervisor",
+      "tenant_id": "smoke-tenant",
+      "scope": "BACKOFFICE"
+    },
+    "time_terminal": {
+      "signin_status": 200,
+      "set_auth_token_received": true,
+      "get_session_status": 200,
+      "mapped_role": "time_terminal",
+      "tenant_id": "smoke-tenant",
+      "scope": "BACKOFFICE"
+    }
+  },
+  "role_access_matrix": {
+    "admin": {
+      "expected": "write",
+      "periods_status": 200,
+      "declarations_status": 200,
+      "generate_probe_status": 400
+    },
+    "hr": {
+      "expected": "write",
+      "periods_status": 200,
+      "declarations_status": 200,
+      "generate_probe_status": 400
+    },
+    "manager": {
+      "expected": "read_only",
+      "periods_status": 200,
+      "declarations_status": 200,
+      "generate_probe_status": 403
+    },
+    "employee": {
+      "expected": "denied",
+      "periods_status": 403,
+      "declarations_status": 403,
+      "generate_probe_status": 403
+    },
+    "supervisor": {
+      "expected": "denied",
+      "periods_status": 403,
+      "declarations_status": 403,
+      "generate_probe_status": 403
+    },
+    "time_terminal": {
+      "expected": "denied",
+      "periods_status": 403,
+      "declarations_status": 403,
+      "generate_probe_status": 403
+    }
+  },
+  "compliance_workflow": {
+    "load_dashboard": {
+      "periods": 200,
+      "declarations": 200
+    },
+    "create_period": "reused_existing",
+    "generate_cnss": 409,
+    "generate_cnamgs": 409,
+    "generate_irpp": 409,
+    "generate_is": 409,
+    "open_detail": 500,
+    "lines_count": null,
+    "detail_status_before": null,
+    "export_statuses": {
+      "PDF": 500,
+      "EXCEL": 500,
+      "CSV": 500
+    },
+    "resolved_pdf_export_id": null,
+    "download_pdf": null,
+    "mark_submitted": {
+      "http_status": 500,
+      "result_status": null
+    },
+    "archive": 500,
+    "is_ui_policy": "IS must remain disabled/unavailable in Flutter UI despite backend generic generation support."
+  },
+  "samples": {
+    "export_response_shape": null,
+    "mark_submitted_response": {
+      "success": false,
+      "data": null,
+      "error": {
+        "code": "INTERNAL_SERVER_ERROR",
+        "message": "invalid input syntax for type uuid: \"None\""
+      },
+      "meta": {
+        "timestamp": "2026-06-16T03:11:01.366Z",
+        "correlationId": "e12d1cfc-4c7b-45fb-9509-e4e0b50a43cd",
+        "path": "/api/compliance/declarations/None/mark-submitted"
+      }
+    }
+  },
+  "mismatches": [
+    "export/download issue: exportId not resolved from composite payload",
+    "export/download issue: PDF download failed",
+    "export/download issue: unexpected Content-Type",
+    "export/download issue: filename missing from Content-Disposition",
+    "mark-submitted issue: status not SUBMITTED_MANUALLY"
+  ]
+}

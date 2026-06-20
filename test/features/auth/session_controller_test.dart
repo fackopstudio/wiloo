@@ -11,24 +11,27 @@ import '../../support/in_memory_token_store.dart';
 
 void main() {
   group('SessionManager', () {
-    test('bootstraps to authenticated when repository resolves a session',
-        () async {
-      final repo = _FakeAuthRepository(
-        bootstrap: _adminSnapshot,
-      );
-      final container = _container(repo);
-      addTearDown(container.dispose);
+    test(
+      'bootstraps to authenticated when repository resolves a session',
+      () async {
+        final repo = _FakeAuthRepository(bootstrap: _adminSnapshot);
+        final container = _container(repo);
+        addTearDown(container.dispose);
 
-      // Trigger build + bootstrap.
-      expect(
-        container.read(sessionControllerProvider).isAuthenticated,
-        isFalse,
-      );
-      await _pumpEventQueue();
+        // Trigger build + bootstrap.
+        expect(
+          container.read(sessionControllerProvider).isAuthenticated,
+          isFalse,
+        );
+        await _pumpEventQueue();
 
-      expect(container.read(sessionControllerProvider).isAuthenticated, isTrue);
-      expect(container.read(sessionControllerProvider).role, UserRole.admin);
-    });
+        expect(
+          container.read(sessionControllerProvider).isAuthenticated,
+          isTrue,
+        );
+        expect(container.read(sessionControllerProvider).role, UserRole.admin);
+      },
+    );
 
     test('login updates the snapshot', () async {
       final repo = _FakeAuthRepository(signIn: _adminSnapshot);
@@ -98,11 +101,9 @@ const _adminSnapshot = SessionSnapshot(
 );
 
 class _FakeAuthRepository implements AuthRepository {
-  _FakeAuthRepository({
-    SessionSnapshot? bootstrap,
-    SessionSnapshot? signIn,
-  }) : _bootstrap = bootstrap ?? const SessionSnapshot.guest(),
-       _signIn = signIn ?? const SessionSnapshot.guest();
+  _FakeAuthRepository({SessionSnapshot? bootstrap, SessionSnapshot? signIn})
+    : _bootstrap = bootstrap ?? const SessionSnapshot.guest(),
+      _signIn = signIn ?? const SessionSnapshot.guest();
 
   final SessionSnapshot _bootstrap;
   final SessionSnapshot _signIn;

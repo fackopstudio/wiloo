@@ -64,6 +64,25 @@ Dev par defaut:
 flutter run
 ```
 
+Le fallback local pointe vers le backend Docker Wiloo:
+
+```text
+http://localhost:3002/api
+```
+
+Pour Android emulator, utiliser l'adresse de l'hote Android:
+
+```bash
+flutter run -d emulator --dart-define=API_BASE_URL=http://10.0.2.2:3002/api
+```
+
+Pour un appareil physique, utiliser l'adresse IP locale du Mac ou son nom
+reseau local. Le nom peut etre obtenu avec `scutil --get LocalHostName`:
+
+```bash
+flutter run -d <DEVICE_ID> --dart-define=API_BASE_URL=http://<NOM_DU_MAC>.local:3002/api
+```
+
 Staging:
 
 ```bash

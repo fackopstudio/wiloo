@@ -1,7 +1,11 @@
 enum AppRoute {
+  welcome('/'),
   auth('/auth'),
+  register('/auth/register'),
   unauthorized('/unauthorized'),
+  terminal('/terminal'),
   timeclock('/timeclock'),
+  backofficeDashboard('/backoffice/dashboard'),
   employee('/employee'),
   manager('/manager'),
   hrAdmin('/hr-admin'),

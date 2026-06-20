@@ -131,9 +131,7 @@ void main() {
       expect(button.onPressed, isNull);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
       expect(
-        tester
-            .widget<EditableText>(find.byType(EditableText).last)
-            .obscureText,
+        tester.widget<EditableText>(find.byType(EditableText).last).obscureText,
         isTrue,
       );
       expect(find.textContaining('super-secret-password'), findsOneWidget);
@@ -150,6 +148,16 @@ void main() {
         find.byKey(const Key('auth_password_visibility_toggle')),
         findsOneWidget,
       );
+    });
+
+    testWidgets('shows invitation access instead of public signup', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_testApp(repository: _FakeAuthRepository()));
+
+      expect(find.byKey(const Key('auth_invitation_link')), findsOneWidget);
+      expect(find.text('Accès sur invitation'), findsOneWidget);
+      expect(find.text('Créer un compte Wiloo'), findsNothing);
     });
   });
 }

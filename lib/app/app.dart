@@ -16,6 +16,10 @@ class WilooApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      // Pin light mode so the brand palette stays identical across devices and
+      // simulators regardless of the OS dark/light setting. Dark theme is kept
+      // defined for a future, deliberate rollout.
+      themeMode: ThemeMode.light,
       routerConfig: router,
     );
   }

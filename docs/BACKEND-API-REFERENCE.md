@@ -588,6 +588,24 @@ Export:
 - Cree un `DeclarationExport`.
 - Stocke le fichier cote backend via `storageKey`.
 - Ne retourne pas d'URL signee.
+- Le `POST /api/compliance/declarations/:id/export` retourne une enveloppe
+  dont `data` est un payload composite confirme en runtime:
+
+```ts
+type ExportDeclarationResponse = {
+  declaration: SocialFiscalDeclaration;
+  export: DeclarationExport;
+  download: {
+    exportId: string;
+    fileName: string;
+    mimeType: string;
+  };
+};
+```
+
+- L'identifiant a utiliser pour le telechargement est `data.export.id`;
+  `data.download.exportId` expose le meme identifiant pour faciliter le flux
+  client.
 - Le telechargement se fait par stream binaire:
 
 ```text

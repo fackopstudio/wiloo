@@ -2,11 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/config/app_config.dart';
+import '../../core/config/app_mode.dart';
 import '../../features/auth/application/session_controller.dart';
 import '../../features/auth/domain/session_snapshot.dart';
-import '../../features/auth/domain/user_role.dart';
 import '../../features/auth/presentation/auth_screen.dart';
+import '../../features/auth/presentation/register_screen.dart';
 import '../../features/auth/presentation/unauthorized_screen.dart';
+import '../../features/backoffice/presentation/backoffice_dashboard_page.dart';
 import '../../features/compliance/presentation/pages/compliance_dashboard_page.dart';
 import '../../features/compliance/presentation/pages/declaration_archive_page.dart';
 import '../../features/compliance/presentation/pages/declaration_detail_page.dart';
@@ -17,11 +20,19 @@ import '../../features/compliance/presentation/pages/declaration_periods_page.da
 import '../../features/employee/presentation/employee_home_screen.dart';
 import '../../features/hr_admin/presentation/hr_admin_home_screen.dart';
 import '../../features/manager/presentation/manager_home_screen.dart';
+import '../../features/onboarding/presentation/welcome_screen.dart';
 import '../../features/timeclock/presentation/timeclock_home_screen.dart';
+import '../shell/backoffice_shell.dart';
+import 'app_redirect.dart';
 import 'app_routes.dart';
-import 'compliance_route_guard.dart';
+
+/// Active runtime mode. Defaults to [AppConfig.appMode] (backoffice) and can be
+/// overridden in tests to exercise the terminal/kiosk startup flow.
+final appModeProvider = Provider<AppMode>((ref) => AppConfig.appMode);
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final mode = ref.watch(appModeProvider);
+
   // Bridges Riverpod session changes to go_router so login/logout/expiry all
   // refresh redirects. Redirect logic stays centralized here (never in widgets).
   final refreshSignal = ValueNotifier<int>(0);
@@ -31,29 +42,43 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(refreshSignal.dispose);
 
   return GoRouter(
-    initialLocation: AppRoute.timeclock.path,
+    initialLocation: mode == AppMode.terminal
+        ? AppRoute.terminal.path
+        : AppRoute.welcome.path,
     refreshListenable: refreshSignal,
     redirect: (context, state) {
       final session = ref.read(sessionControllerProvider);
-      if (state.uri.path == AppRoute.auth.path && session.isAuthenticated) {
-        return _postLoginLocation(session);
-      }
-
-      return complianceRouteRedirect(
+      return resolveAppRedirect(
         location: state.uri.path,
         session: session,
+        mode: mode,
       );
     },
     routes: [
+      GoRoute(
+        path: AppRoute.welcome.path,
+        name: AppRoute.welcome.name,
+        builder: (context, state) => const WelcomeScreen(),
+      ),
       GoRoute(
         path: AppRoute.auth.path,
         name: AppRoute.auth.name,
         builder: (context, state) => const AuthScreen(),
       ),
       GoRoute(
+        path: AppRoute.register.path,
+        name: AppRoute.register.name,
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
         path: AppRoute.unauthorized.path,
         name: AppRoute.unauthorized.name,
         builder: (context, state) => const UnauthorizedScreen(),
+      ),
+      GoRoute(
+        path: AppRoute.terminal.path,
+        name: AppRoute.terminal.name,
+        builder: (context, state) => const TimeclockHomeScreen(),
       ),
       GoRoute(
         path: AppRoute.timeclock.path,
@@ -74,6 +99,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoute.hrAdmin.path,
         name: AppRoute.hrAdmin.name,
         builder: (context, state) => const HrAdminHomeScreen(),
+      ),
+      // Authenticated backoffice landing wrapped in the shared shell.
+      ShellRoute(
+        builder: (context, state, child) =>
+            BackofficeShell(location: state.uri.path, child: child),
+        routes: [
+          GoRoute(
+            path: AppRoute.backofficeDashboard.path,
+            name: AppRoute.backofficeDashboard.name,
+            builder: (context, state) => const BackofficeDashboardPage(),
+          ),
+        ],
       ),
       GoRoute(
         path: AppRoute.compliance.path,
@@ -119,17 +156,3 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
-
-String _postLoginLocation(SessionSnapshot session) {
-  if (session.isTerminalSession) {
-    return AppRoute.timeclock.path;
-  }
-
-  return switch (session.role) {
-    UserRole.admin || UserRole.hr => AppRoute.hrAdmin.path,
-    UserRole.manager || UserRole.supervisor => AppRoute.manager.path,
-    UserRole.employee => AppRoute.employee.path,
-    UserRole.timeTerminal => AppRoute.timeclock.path,
-    null => AppRoute.employee.path,
-  };
-}

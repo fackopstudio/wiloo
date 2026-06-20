@@ -28,26 +28,10 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Failure.unknown(cause: error);
     }
 
-    final token = result.token;
-    if (token == null) {
-      // No token means the backend did not establish a session.
-      throw const Failure.unauthorized(
-        message: 'Email ou mot de passe invalide.',
-      );
-    }
-
-    await tokenStore.saveToken(token);
-
-    // The session (role/scope/tenant) is authoritative from get-session.
-    final snapshot = await getCurrentSession();
-    if (!snapshot.isAuthenticated) {
-      await tokenStore.clearToken();
-      throw const Failure.unauthorized(
-        message: 'Session invalide. Veuillez réessayer.',
-      );
-    }
-
-    return snapshot;
+    return _persistTokenAndHydrateSession(
+      result,
+      missingTokenMessage: 'Email ou mot de passe invalide.',
+    );
   }
 
   @override
@@ -93,6 +77,30 @@ class AuthRepositoryImpl implements AuthRepository {
     await tokenStore.clearToken();
   }
 
+  Future<SessionSnapshot> _persistTokenAndHydrateSession(
+    AuthSignInResult result, {
+    required String missingTokenMessage,
+  }) async {
+    final token = result.token;
+    if (token == null) {
+      // No token means the backend did not establish a mobile bearer session.
+      throw Failure.unauthorized(message: missingTokenMessage);
+    }
+
+    await tokenStore.saveToken(token);
+
+    // The session (role/scope/tenant) is authoritative from get-session.
+    final snapshot = await getCurrentSession();
+    if (!snapshot.isAuthenticated) {
+      await tokenStore.clearToken();
+      throw const Failure.unauthorized(
+        message: 'Session invalide. Veuillez réessayer.',
+      );
+    }
+
+    return snapshot;
+  }
+
   Failure _mapSignInError(DioException error) {
     final statusCode = error.response?.statusCode;
     if (statusCode == 400 || statusCode == 401) {
@@ -101,9 +109,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
     }
     if (statusCode == 403) {
-      return const Failure.forbidden(
-        message: "Accès refusé pour ce compte.",
-      );
+      return const Failure.forbidden(message: "Accès refusé pour ce compte.");
     }
     return _mapNetworkError(error);
   }

@@ -31,24 +31,26 @@ void main() {
       expect(result.user?.id, 'u1');
     });
 
-    test('signInEmail falls back to body token when header is absent',
-        () async {
-      final dataSource = AuthRemoteDataSourceImpl(
-        _dio(
-          _JsonResponse(
-            statusCode: 200,
-            body: {
-              'token': 'body-token',
-              'user': {'id': 'u1', 'email': 'a@b.com'},
-            },
+    test(
+      'signInEmail falls back to body token when header is absent',
+      () async {
+        final dataSource = AuthRemoteDataSourceImpl(
+          _dio(
+            _JsonResponse(
+              statusCode: 200,
+              body: {
+                'token': 'body-token',
+                'user': {'id': 'u1', 'email': 'a@b.com'},
+              },
+            ),
           ),
-        ),
-      );
+        );
 
-      final result = await dataSource.signInEmail('a@b.com', 'pw');
+        final result = await dataSource.signInEmail('a@b.com', 'pw');
 
-      expect(result.token, 'body-token');
-    });
+        expect(result.token, 'body-token');
+      },
+    );
 
     test('getSession returns null for a 200 null body', () async {
       final dataSource = AuthRemoteDataSourceImpl(
@@ -58,32 +60,34 @@ void main() {
       expect(await dataSource.getSession(), isNull);
     });
 
-    test('getSession parses user role, scope and session tenant fallback',
-        () async {
-      final dataSource = AuthRemoteDataSourceImpl(
-        _dio(
-          _JsonResponse(
-            statusCode: 200,
-            body: {
-              'user': {
-                'id': 'u1',
-                'email': 'hr@b.com',
-                'role': 'hr',
-                'scope': 'BACKOFFICE',
+    test(
+      'getSession parses user role, scope and session tenant fallback',
+      () async {
+        final dataSource = AuthRemoteDataSourceImpl(
+          _dio(
+            _JsonResponse(
+              statusCode: 200,
+              body: {
+                'user': {
+                  'id': 'u1',
+                  'email': 'hr@b.com',
+                  'role': 'hr',
+                  'scope': 'BACKOFFICE',
+                },
+                'session': {'tenantId': 'tenant-from-session'},
               },
-              'session': {'tenantId': 'tenant-from-session'},
-            },
+            ),
           ),
-        ),
-      );
+        );
 
-      final session = await dataSource.getSession();
+        final session = await dataSource.getSession();
 
-      expect(session, isNotNull);
-      expect(session!.role, UserRole.hr);
-      expect(session.scope, AuthScope.backoffice);
-      expect(session.tenantId, 'tenant-from-session');
-    });
+        expect(session, isNotNull);
+        expect(session!.role, UserRole.hr);
+        expect(session.scope, AuthScope.backoffice);
+        expect(session.tenantId, 'tenant-from-session');
+      },
+    );
 
     test('getSession unwraps the standard API envelope', () async {
       final dataSource = AuthRemoteDataSourceImpl(

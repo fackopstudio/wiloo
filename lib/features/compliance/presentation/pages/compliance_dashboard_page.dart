@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../../../shared/motion/wiloo_motion.dart';
+import '../../../../shared/responsive/responsive.dart';
+import '../../../../shared/widgets/wiloo_shimmer.dart';
 import '../../domain/entities/compliance_dashboard_view.dart';
 import '../../domain/enums/declaration_status.dart';
 import '../../domain/value_objects/compliance_access.dart';
@@ -25,7 +28,7 @@ class ComplianceDashboardPage extends ConsumerWidget {
           if (access.isReadOnly) const ComplianceReadOnlyBanner(),
           Expanded(
             child: dashboardAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const _DashboardLoading(),
               error: (_, _) => ComplianceErrorState(
                 message: 'Impossible de charger le tableau de bord.',
                 onRetry: () => ref.invalidate(complianceDashboardProvider),
@@ -57,9 +60,10 @@ class _DashboardBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final counts = _statusCounts();
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
+    return PageContainer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
         const CompliancePreparatoryNotice(),
         const SizedBox(height: 20),
         const ComplianceSectionTitle("Vue d'ensemble"),
@@ -93,7 +97,26 @@ class _DashboardBody extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 16),
-      ],
+        ],
+      ),
+    ).wilooEntrance();
+  }
+}
+
+class _DashboardLoading extends StatelessWidget {
+  const _DashboardLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const PageContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ShimmerBox(height: 56),
+          SizedBox(height: 20),
+          ShimmerList(itemCount: 4),
+        ],
+      ),
     );
   }
 }

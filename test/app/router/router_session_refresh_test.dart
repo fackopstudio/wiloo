@@ -22,33 +22,33 @@ import '../../support/in_memory_token_store.dart';
 
 void main() {
   group('authenticated auth route redirects', () {
-    testWidgets('admin and hr leave auth for the HR admin area', (
+    testWidgets('backoffice roles leave auth for the backoffice dashboard', (
       tester,
     ) async {
-      for (final role in [UserRole.admin, UserRole.hr]) {
+      for (final role in [
+        UserRole.admin,
+        UserRole.hr,
+        UserRole.manager,
+        UserRole.supervisor,
+        UserRole.employee,
+      ]) {
         final router = await _pumpRouter(tester, role: role);
-        expect(router.routeInformationProvider.value.uri.path, '/hr-admin');
+        expect(
+          router.routeInformationProvider.value.uri.path,
+          '/backoffice/dashboard',
+        );
       }
     });
 
-    testWidgets('manager leaves auth for manager area', (tester) async {
-      final router = await _pumpRouter(tester, role: UserRole.manager);
-      expect(router.routeInformationProvider.value.uri.path, '/manager');
-    });
-
-    testWidgets('employee leaves auth for employee area', (tester) async {
-      final router = await _pumpRouter(tester, role: UserRole.employee);
-      expect(router.routeInformationProvider.value.uri.path, '/employee');
-    });
-
-    testWidgets('time_terminal leaves auth for timeclock', (tester) async {
+    testWidgets('time_terminal leaves auth for terminal', (tester) async {
       final router = await _pumpRouter(tester, role: UserRole.timeTerminal);
-      expect(router.routeInformationProvider.value.uri.path, '/timeclock');
+      expect(router.routeInformationProvider.value.uri.path, '/terminal');
     });
   });
 
-  testWidgets('logout refreshes redirects and bounces compliance to auth',
-      (tester) async {
+  testWidgets('logout refreshes redirects and bounces compliance to auth', (
+    tester,
+  ) async {
     final repo = _FakeAuthRepository(bootstrap: _adminSnapshot);
     final container = ProviderContainer(
       overrides: [
@@ -180,8 +180,10 @@ class _EmptyComplianceRepo implements ComplianceRepository {
   ) => throw UnimplementedError();
 
   @override
-  Future<DeclarationDownloadResult> downloadExport(String id, String exportId) =>
-      throw UnimplementedError();
+  Future<DeclarationDownloadResult> downloadExport(
+    String id,
+    String exportId,
+  ) => throw UnimplementedError();
 
   @override
   Future<SocialFiscalDeclaration> markSubmitted(

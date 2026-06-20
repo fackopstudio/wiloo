@@ -86,14 +86,50 @@ void showComplianceSnackBar(
   );
 }
 
+/// Resolves the export id from the backend POST `/export` snapshot.
+///
+/// The confirmed runtime response wraps the export inside a composite object:
+/// `{ declaration: {...}, export: { id, ... }, download: { exportId, ... } }`.
+/// The id is therefore read, in order, from the top-level snapshot (kept for
+/// backward compatibility), then from the nested `export` and `download`
+/// objects. Only confirmed backend fields are read; no field is invented.
 String? exportIdFromRaw(DeclarationExport export) {
-  for (final key in const ['id', 'exportId']) {
-    final value = export.raw[key];
+  final raw = export.raw;
+
+  // 1. Top-level snapshot (e.g. when the export object is returned directly).
+  final topLevel = _firstStringValue(raw, const ['id', 'exportId']);
+  if (topLevel != null) {
+    return topLevel;
+  }
+
+  // 2. Nested `export` object from the composite POST /export response.
+  final exportObject = raw['export'];
+  if (exportObject is Map<String, Object?>) {
+    final nested = _firstStringValue(exportObject, const ['id', 'exportId']);
+    if (nested != null) {
+      return nested;
+    }
+  }
+
+  // 3. Nested `download` object exposes the export id as `exportId`.
+  final downloadObject = raw['download'];
+  if (downloadObject is Map<String, Object?>) {
+    final nested = _firstStringValue(downloadObject, const ['exportId', 'id']);
+    if (nested != null) {
+      return nested;
+    }
+  }
+
+  return null;
+}
+
+String? _firstStringValue(Map<String, Object?> source, List<String> keys) {
+  for (final key in keys) {
+    final value = source[key];
     if (value is String && value.isNotEmpty) {
       return value;
     }
   }
-
   return null;
 }
 

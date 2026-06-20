@@ -43,17 +43,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       data: {'email': email, 'password': password},
     );
 
-    final token =
-        response.headers.value(kSetAuthTokenHeader) ??
-        _tokenFromBody(_unwrap(response.data));
-
-    final body = _unwrap(response.data);
-    final userMap = _userMap(body);
-
-    return AuthSignInResult(
-      token: (token != null && token.isNotEmpty) ? token : null,
-      user: userMap == null ? null : _parseUser(userMap),
-    );
+    return _authResultFromResponse(response);
   }
 
   @override
@@ -94,6 +84,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     } on Object {
       // Local logout must remain safe even if the call fails.
     }
+  }
+
+  AuthSignInResult _authResultFromResponse(Response<Object?> response) {
+    final body = _unwrap(response.data);
+    final token =
+        response.headers.value(kSetAuthTokenHeader) ?? _tokenFromBody(body);
+    final userMap = _userMap(body);
+
+    return AuthSignInResult(
+      token: (token != null && token.isNotEmpty) ? token : null,
+      user: userMap == null ? null : _parseUser(userMap),
+    );
   }
 
   AuthUser _parseUser(Map<String, Object?> userMap) {

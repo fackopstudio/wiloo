@@ -9,13 +9,19 @@ Le backend NestJS existant est la source de verite. Le mobile doit s'aligner sur
 Dev par defaut:
 
 ```text
-http://localhost:3000/api
+http://localhost:3002/api
 ```
 
 Configurable avec:
 
 ```bash
 --dart-define=API_BASE_URL=...
+```
+
+Pour Android emulator, utiliser:
+
+```bash
+--dart-define=API_BASE_URL=http://10.0.2.2:3002/api
 ```
 
 ## Auth

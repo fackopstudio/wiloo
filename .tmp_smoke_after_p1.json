@@ -1,0 +1,527 @@
+{
+  "environment": {},
+  "invalid_login_probe": {
+    "status": 401,
+    "body": {
+      "code": "INVALID_EMAIL_OR_PASSWORD",
+      "message": "Invalid email or password"
+    },
+    "user_friendly": true
+  },
+  "auth_matrix": {
+    "admin": {
+      "signin_status": 200,
+      "set_auth_token": true,
+      "get_session_status": 200,
+      "role": null,
+      "tenantId": null,
+      "scope": null
+    },
+    "hr": {
+      "signin_status": 200,
+      "set_auth_token": true,
+      "get_session_status": 200,
+      "role": null,
+      "tenantId": null,
+      "scope": null
+    },
+    "manager": {
+      "signin_status": 200,
+      "set_auth_token": true,
+      "get_session_status": 200,
+      "role": null,
+      "tenantId": null,
+      "scope": null
+    },
+    "employee": {
+      "signin_status": 200,
+      "set_auth_token": true,
+      "get_session_status": 200,
+      "role": null,
+      "tenantId": null,
+      "scope": null
+    }
+  },
+  "compliance_access_matrix": {
+    "admin": {
+      "expected": "write",
+      "periods_status": 200,
+      "declarations_status": 200,
+      "generate_probe_status": 404
+    },
+    "hr": {
+      "expected": "write",
+      "periods_status": 200,
+      "declarations_status": 200,
+      "generate_probe_status": 404
+    },
+    "manager": {
+      "expected": "read_only",
+      "periods_status": 200,
+      "declarations_status": 200,
+      "generate_probe_status": 403
+    },
+    "employee": {
+      "expected": "denied",
+      "periods_status": 403,
+      "declarations_status": 403,
+      "generate_probe_status": 403
+    }
+  },
+  "workflow": {
+    "create_period_status": 201,
+    "period_id": "1685cbf8-b9d8-4899-8a6e-70121d1a2778",
+    "generate_cnss": 201,
+    "generate_cnamgs": 201,
+    "generate_irpp": 201,
+    "detail_status": 200,
+    "lines_count": 5,
+    "line_has_employee_identity": true,
+    "line_has_amounts": true,
+    "mark_ready": 201,
+    "validate": 201,
+    "export_pdf": 201,
+    "resolved_export_id": "09077949-29c6-4232-b0c5-0d3df3dc59d2",
+    "export_excel": 201,
+    "export_csv": 201,
+    "download_pdf_status": 200,
+    "mark_submitted_http": 201,
+    "mark_submitted_status": "SUBMITTED_MANUALLY",
+    "archive": 201
+  },
+  "samples": {
+    "line_sample": {
+      "id": "57a2ef12-4150-4e41-8ea0-11b641bd8f19",
+      "tenantId": "smoke-tenant",
+      "declarationId": "9b94bae8-920e-4916-8a9a-3d06d0e85383",
+      "employeeId": "87e5f788-9b9f-471c-b693-f331921013f0",
+      "payrollId": null,
+      "userId": "61665a24-2b6d-4036-9478-579aafc388dc",
+      "employeeSnapshot": {
+        "name": "Smoke Admin",
+        "email": "smoke.admin@wiloo.test",
+        "userId": "61665a24-2b6d-4036-9478-579aafc388dc",
+        "hireDate": "2025-01-15",
+        "jobTitle": "Smoke admin",
+        "department": "Compliance",
+        "employeeId": "87e5f788-9b9f-471c-b693-f331921013f0",
+        "contractType": "CDI"
+      },
+      "contractSnapshot": {
+        "salary": "450000.00",
+        "payrollIds": [],
+        "payrollMonths": []
+      },
+      "companySnapshot": null,
+      "grossSalary": "0.00",
+      "taxableSalary": "0.00",
+      "socialContributionBase": "0.00",
+      "employeeContributionAmount": "0.00",
+      "employerContributionAmount": "0.00",
+      "withholdingAmount": "0.00",
+      "deductionsSnapshot": {
+        "taxDeduction": 0,
+        "socialCharges": 0,
+        "otherDeductions": 0,
+        "absenceDeduction": 0
+      },
+      "benefitsInKindSnapshot": null,
+      "calculationDetails": {
+        "source": "payroll",
+        "ruleSetId": null,
+        "ratesApplied": false,
+        "missingFields": [
+          "Missing validated payroll for employee 87e5f788-9b9f-471c-b693-f331921013f0."
+        ],
+        "ruleSetVersion": null,
+        "declarationType": "CNSS",
+        "officialSubmission": false,
+        "hasValidatedRuleSet": false,
+        "declarableSalaryField": "grossSalary"
+      },
+      "warnings": [
+        "Missing validated payroll for employee 87e5f788-9b9f-471c-b693-f331921013f0."
+      ],
+      "createdAt": "2026-06-16T03:42:36.281Z",
+      "updatedAt": "2026-06-16T03:42:36.281Z"
+    },
+    "export_shape": {
+      "declaration": {
+        "id": "9b94bae8-920e-4916-8a9a-3d06d0e85383",
+        "tenantId": "smoke-tenant",
+        "companyId": null,
+        "declarationPeriodId": "1685cbf8-b9d8-4899-8a6e-70121d1a2778",
+        "type": "CNSS",
+        "status": "EXPORTED",
+        "ruleSetId": null,
+        "sourceSnapshotHash": null,
+        "totalGrossSalary": "0.00",
+        "totalTaxableBase": "0.00",
+        "totalEmployeeContributions": "0.00",
+        "totalEmployerContributions": "0.00",
+        "totalWithholdings": "0.00",
+        "warnings": [
+          "Company information is missing: companyId is not set.",
+          "CNSS rule set is missing; contribution amounts were not calculated.",
+          "Missing validated payroll for employee 87e5f788-9b9f-471c-b693-f331921013f0.",
+          "Missing validated payroll for employee 6a302f8a-2055-4ceb-9e83-03d8516392a6.",
+          "Missing validated payroll for employee a3a3be6b-fd91-4c55-bd08-0d3cf080f6b6.",
+          "Missing validated payroll for employee 4281cb83-1778-404b-8b67-596a989f7c6f.",
+          "Missing validated payroll for employee 2f215ba8-e763-4948-ae1d-fd7a564fa9b1."
+        ],
+        "metadata": {
+          "workflow": {
+            "readyAt": "2026-06-16T03:42:36.310Z",
+            "readyBy": "61665a24-2b6d-4036-9478-579aafc388dc"
+          },
+          "generator": "cnss-preparatory",
+          "completeness": "INCOMPLETE",
+          "isIncomplete": true,
+          "payrollCount": 0,
+          "payrollPeriod": {
+            "year": 2027,
+            "months": [
+              7
+            ]
+          },
+          "officialSubmission": false,
+          "activeEmployeeCount": 5,
+          "hasValidatedRuleSet": false
+        },
+        "createdBy": "61665a24-2b6d-4036-9478-579aafc388dc",
+        "validatedBy": "61665a24-2b6d-4036-9478-579aafc388dc",
+        "validatedAt": "2026-06-16T03:42:36.323Z",
+        "exportedAt": "2026-06-16T03:42:36.343Z",
+        "submittedManuallyAt": null,
+        "createdAt": "2026-06-16T03:42:36.279Z",
+        "updatedAt": "2026-06-16T03:42:36.343Z",
+        "period": {
+          "id": "1685cbf8-b9d8-4899-8a6e-70121d1a2778",
+          "tenantId": "smoke-tenant",
+          "companyId": null,
+          "periodType": "MONTHLY",
+          "year": 2027,
+          "month": 7,
+          "quarter": null,
+          "startDate": "2027-07-01",
+          "endDate": "2027-07-28",
+          "payrollMonth": null,
+          "payrollYear": null,
+          "status": "DRAFT",
+          "createdBy": "61665a24-2b6d-4036-9478-579aafc388dc",
+          "validatedBy": null,
+          "validatedAt": null,
+          "lockedAt": null,
+          "metadata": null,
+          "createdAt": "2026-06-16T03:42:36.272Z",
+          "updatedAt": "2026-06-16T03:42:36.272Z"
+        },
+        "ruleSet": null,
+        "lines": [
+          {
+            "id": "57a2ef12-4150-4e41-8ea0-11b641bd8f19",
+            "tenantId": "smoke-tenant",
+            "declarationId": "9b94bae8-920e-4916-8a9a-3d06d0e85383",
+            "employeeId": "87e5f788-9b9f-471c-b693-f331921013f0",
+            "payrollId": null,
+            "userId": "61665a24-2b6d-4036-9478-579aafc388dc",
+            "employeeSnapshot": {
+              "name": "Smoke Admin",
+              "email": "smoke.admin@wiloo.test",
+              "userId": "61665a24-2b6d-4036-9478-579aafc388dc",
+              "hireDate": "2025-01-15",
+              "jobTitle": "Smoke admin",
+              "department": "Compliance",
+              "employeeId": "87e5f788-9b9f-471c-b693-f331921013f0",
+              "contractType": "CDI"
+            },
+            "contractSnapshot": {
+              "salary": "450000.00",
+              "payrollIds": [],
+              "payrollMonths": []
+            },
+            "companySnapshot": null,
+            "grossSalary": "0.00",
+            "taxableSalary": "0.00",
+            "socialContributionBase": "0.00",
+            "employeeContributionAmount": "0.00",
+            "employerContributionAmount": "0.00",
+            "withholdingAmount": "0.00",
+            "deductionsSnapshot": {
+              "taxDeduction": 0,
+              "socialCharges": 0,
+              "otherDeductions": 0,
+              "absenceDeduction": 0
+            },
+            "benefitsInKindSnapshot": null,
+            "calculationDetails": {
+              "source": "payroll",
+              "ruleSetId": null,
+              "ratesApplied": false,
+              "missingFields": [
+                "Missing validated payroll for employee 87e5f788-9b9f-471c-b693-f331921013f0."
+              ],
+              "ruleSetVersion": null,
+              "declarationType": "CNSS",
+              "officialSubmission": false,
+              "hasValidatedRuleSet": false,
+              "declarableSalaryField": "grossSalary"
+            },
+            "warnings": [
+              "Missing validated payroll for employee 87e5f788-9b9f-471c-b693-f331921013f0."
+            ],
+            "createdAt": "2026-06-16T03:42:36.281Z",
+            "updatedAt": "2026-06-16T03:42:36.281Z"
+          },
+          {
+            "id": "85024488-4cf9-4fd3-8797-927854a95495",
+            "tenantId": "smoke-tenant",
+            "declarationId": "9b94bae8-920e-4916-8a9a-3d06d0e85383",
+            "employeeId": "6a302f8a-2055-4ceb-9e83-03d8516392a6",
+            "payrollId": null,
+            "userId": "33cb5c73-44af-4695-91ec-93a49a5ad986",
+            "employeeSnapshot": {
+              "name": "Smoke HR",
+              "email": "smoke.hr@wiloo.test",
+              "userId": "33cb5c73-44af-4695-91ec-93a49a5ad986",
+              "hireDate": "2025-01-15",
+              "jobTitle": "Smoke hr",
+              "department": "Compliance",
+              "employeeId": "6a302f8a-2055-4ceb-9e83-03d8516392a6",
+              "contractType": "CDI"
+            },
+            "contractSnapshot": {
+              "salary": "450000.00",
+              "payrollIds": [],
+              "payrollMonths": []
+            },
+            "companySnapshot": null,
+            "grossSalary": "0.00",
+            "taxableSalary": "0.00",
+            "socialContributionBase": "0.00",
+            "employeeContributionAmount": "0.00",
+            "employerContributionAmount": "0.00",
+            "withholdingAmount": "0.00",
+            "deductionsSnapshot": {
+              "taxDeduction": 0,
+              "socialCharges": 0,
+              "otherDeductions": 0,
+              "absenceDeduction": 0
+            },
+            "benefitsInKindSnapshot": null,
+            "calculationDetails": {
+              "source": "payroll",
+              "ruleSetId": null,
+              "ratesApplied": false,
+              "missingFields": [
+                "Missing validated payroll for employee 6a302f8a-2055-4ceb-9e83-03d8516392a6."
+              ],
+              "ruleSetVersion": null,
+              "declarationType": "CNSS",
+              "officialSubmission": false,
+              "hasValidatedRuleSet": false,
+              "declarableSalaryField": "grossSalary"
+            },
+            "warnings": [
+              "Missing validated payroll for employee 6a302f8a-2055-4ceb-9e83-03d8516392a6."
+            ],
+            "createdAt": "2026-06-16T03:42:36.281Z",
+            "updatedAt": "2026-06-16T03:42:36.281Z"
+          },
+          {
+            "id": "6a4a9402-f8c0-48cb-9c0d-e47354b49e90",
+            "tenantId": "smoke-tenant",
+            "declarationId": "9b94bae8-920e-4916-8a9a-3d06d0e85383",
+            "employeeId": "a3a3be6b-fd91-4c55-bd08-0d3cf080f6b6",
+            "payrollId": null,
+            "userId": "c857afaf-a6c1-4142-a370-d97e5cc7ce00",
+            "employeeSnapshot": {
+              "name": "Smoke Manager",
+              "email": "smoke.manager@wiloo.test",
+              "userId": "c857afaf-a6c1-4142-a370-d97e5cc7ce00",
+              "hireDate": "2025-01-15",
+              "jobTitle": "Smoke manager",
+              "department": "Compliance",
+              "employeeId": "a3a3be6b-fd91-4c55-bd08-0d3cf080f6b6",
+              "contractType": "CDI"
+            },
+            "contractSnapshot": {
+              "salary": "450000.00",
+              "payrollIds": [],
+              "payrollMonths": []
+            },
+            "companySnapshot": null,
+            "grossSalary": "0.00",
+            "taxableSalary": "0.00",
+            "socialContributionBase": "0.00",
+            "employeeContributionAmount": "0.00",
+            "employerContributionAmount": "0.00",
+            "withholdingAmount": "0.00",
+            "deductionsSnapshot": {
+              "taxDeduction": 0,
+              "socialCharges": 0,
+              "otherDeductions": 0,
+              "absenceDeduction": 0
+            },
+            "benefitsInKindSnapshot": null,
+            "calculationDetails": {
+              "source": "payroll",
+              "ruleSetId": null,
+              "ratesApplied": false,
+              "missingFields": [
+                "Missing validated payroll for employee a3a3be6b-fd91-4c55-bd08-0d3cf080f6b6."
+              ],
+              "ruleSetVersion": null,
+              "declarationType": "CNSS",
+              "officialSubmission": false,
+              "hasValidatedRuleSet": false,
+              "declarableSalaryField": "grossSalary"
+            },
+            "warnings": [
+              "Missing validated payroll for employee a3a3be6b-fd91-4c55-bd08-0d3cf080f6b6."
+            ],
+            "createdAt": "2026-06-16T03:42:36.281Z",
+            "updatedAt": "2026-06-16T03:42:36.281Z"
+          },
+          {
+            "id": "89d184f8-88fd-4fce-87c0-90d0bf02f9a9",
+            "tenantId": "smoke-tenant",
+            "declarationId": "9b94bae8-920e-4916-8a9a-3d06d0e85383",
+            "employeeId": "4281cb83-1778-404b-8b67-596a989f7c6f",
+            "payrollId": null,
+            "userId": "40dd3b97-0726-4039-9938-6b561e7bc4da",
+            "employeeSnapshot": {
+              "name": "Smoke Employee",
+              "email": "smoke.employee@wiloo.test",
+              "userId": "40dd3b97-0726-4039-9938-6b561e7bc4da",
+              "hireDate": "2025-01-15",
+              "jobTitle": "Smoke employee",
+              "department": "Compliance",
+              "employeeId": "4281cb83-1778-404b-8b67-596a989f7c6f",
+              "contractType": "CDI"
+            },
+            "contractSnapshot": {
+              "salary": "450000.00",
+              "payrollIds": [],
+              "payrollMonths": []
+            },
+            "companySnapshot": null,
+            "grossSalary": "0.00",
+            "taxableSalary": "0.00",
+            "socialContributionBase": "0.00",
+            "employeeContributionAmount": "0.00",
+            "employerContributionAmount": "0.00",
+            "withholdingAmount": "0.00",
+            "deductionsSnapshot": {
+              "taxDeduction": 0,
+              "socialCharges": 0,
+              "otherDeductions": 0,
+              "absenceDeduction": 0
+            },
+            "benefitsInKindSnapshot": null,
+            "calculationDetails": {
+              "source": "payroll",
+              "ruleSetId": null,
+              "ratesApplied": false,
+              "missingFields": [
+                "Missing validated payroll for employee 4281cb83-1778-404b-8b67-596a989f7c6f."
+              ],
+              "ruleSetVersion": null,
+              "declarationType": "CNSS",
+              "officialSubmission": false,
+              "hasValidatedRuleSet": false,
+              "declarableSalaryField": "grossSalary"
+            },
+            "warnings": [
+              "Missing validated payroll for employee 4281cb83-1778-404b-8b67-596a989f7c6f."
+            ],
+            "createdAt": "2026-06-16T03:42:36.281Z",
+            "updatedAt": "2026-06-16T03:42:36.281Z"
+          },
+          {
+            "id": "db595aed-ad9f-45ff-8f15-661478865223",
+            "tenantId": "smoke-tenant",
+            "declarationId": "9b94bae8-920e-4916-8a9a-3d06d0e85383",
+            "employeeId": "2f215ba8-e763-4948-ae1d-fd7a564fa9b1",
+            "payrollId": null,
+            "userId": "408f8e8f-2c8d-4f78-8e3a-2bb291aa552e",
+            "employeeSnapshot": {
+              "name": "Smoke Supervisor",
+              "email": "smoke.supervisor@wiloo.test",
+              "userId": "408f8e8f-2c8d-4f78-8e3a-2bb291aa552e",
+              "hireDate": "2025-01-15",
+              "jobTitle": "Smoke supervisor",
+              "department": "Compliance",
+              "employeeId": "2f215ba8-e763-4948-ae1d-fd7a564fa9b1",
+              "contractType": "CDI"
+            },
+            "contractSnapshot": {
+              "salary": "450000.00",
+              "payrollIds": [],
+              "payrollMonths": []
+            },
+            "companySnapshot": null,
+            "grossSalary": "0.00",
+            "taxableSalary": "0.00",
+            "socialContributionBase": "0.00",
+            "employeeContributionAmount": "0.00",
+            "employerContributionAmount": "0.00",
+            "withholdingAmount": "0.00",
+            "deductionsSnapshot": {
+              "taxDeduction": 0,
+              "socialCharges": 0,
+              "otherDeductions": 0,
+              "absenceDeduction": 0
+            },
+            "benefitsInKindSnapshot": null,
+            "calculationDetails": {
+              "source": "payroll",
+              "ruleSetId": null,
+              "ratesApplied": false,
+              "missingFields": [
+                "Missing validated payroll for employee 2f215ba8-e763-4948-ae1d-fd7a564fa9b1."
+              ],
+              "ruleSetVersion": null,
+              "declarationType": "CNSS",
+              "officialSubmission": false,
+              "hasValidatedRuleSet": false,
+              "declarableSalaryField": "grossSalary"
+            },
+            "warnings": [
+              "Missing validated payroll for employee 2f215ba8-e763-4948-ae1d-fd7a564fa9b1."
+            ],
+            "createdAt": "2026-06-16T03:42:36.281Z",
+            "updatedAt": "2026-06-16T03:42:36.281Z"
+          }
+        ]
+      },
+      "export": {
+        "tenantId": "smoke-tenant",
+        "declarationId": "9b94bae8-920e-4916-8a9a-3d06d0e85383",
+        "format": "PDF",
+        "fileName": "CNSS_preparatory_summary_2027_7.pdf",
+        "storageKey": "smoke-tenant/9b94bae8-920e-4916-8a9a-3d06d0e85383/09077949-29c6-4232-b0c5-0d3df3dc59d2-CNSS_preparatory_summary_2027_7.pdf",
+        "checksum": "929d6e2a231437bba296d87dbe08a7b40c69775695057d357e39c2f63cbb72b3",
+        "generatedBy": "61665a24-2b6d-4036-9478-579aafc388dc",
+        "generatedAt": "2026-06-16T03:42:36.332Z",
+        "templateVersion": null,
+        "ruleSetVersion": null,
+        "status": "GENERATED",
+        "id": "09077949-29c6-4232-b0c5-0d3df3dc59d2",
+        "createdAt": "2026-06-16T03:42:36.332Z",
+        "updatedAt": "2026-06-16T03:42:36.342Z"
+      },
+      "download": {
+        "exportId": "09077949-29c6-4232-b0c5-0d3df3dc59d2",
+        "fileName": "CNSS_preparatory_summary_2027_7.pdf",
+        "mimeType": "application/pdf"
+      }
+    },
+    "download_headers": {
+      "Content-Type": "application/pdf; charset=utf-8",
+      "Content-Disposition": "attachment; filename=\"CNSS_preparatory_summary_2027_7.pdf\"",
+      "filename": "CNSS_preparatory_summary_2027_7.pdf"
+    }
+  },
+  "mismatches": []
+}

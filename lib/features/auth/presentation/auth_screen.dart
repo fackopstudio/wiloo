@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/router/app_routes.dart';
 import '../../../core/error/failure.dart';
 import '../application/session_controller.dart';
 
@@ -39,10 +41,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
 
     try {
-      await ref.read(sessionManagerProvider.notifier).login(
-            _emailController.text.trim(),
-            _passwordController.text,
-          );
+      await ref
+          .read(sessionManagerProvider.notifier)
+          .login(_emailController.text.trim(), _passwordController.text);
       // Navigation stays centralized in app_router via go_router refresh.
     } on Object catch (error) {
       if (!mounted) {
@@ -81,17 +82,28 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
-                          Icons.work_outline,
-                          size: 48,
-                          color: theme.colorScheme.primary,
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: IconButton(
+                            key: const Key('auth_back_to_welcome'),
+                            tooltip: 'Retour à l’accueil',
+                            onPressed: _isSubmitting
+                                ? null
+                                : () => context.go(AppRoute.welcome.path),
+                            icon: const Icon(Icons.arrow_back),
+                          ),
                         ),
-                        const SizedBox(height: 16),
+                        Image.asset(
+                          'assets/brand/wiloo_logo_horizontal.png',
+                          height: 46,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 20),
                         Text(
                           'Connexion Wiloo',
                           textAlign: TextAlign.center,
                           style: theme.textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -145,8 +157,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                               onPressed: _isSubmitting
                                   ? null
                                   : () => setState(() {
-                                        _obscurePassword = !_obscurePassword;
-                                      }),
+                                      _obscurePassword = !_obscurePassword;
+                                    }),
                               icon: Icon(
                                 _obscurePassword
                                     ? Icons.visibility_outlined
@@ -169,6 +181,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                   ),
                                 )
                               : const Text('Se connecter'),
+                        ),
+                        const SizedBox(height: 12),
+                        TextButton(
+                          key: const Key('auth_invitation_link'),
+                          onPressed: _isSubmitting
+                              ? null
+                              : () => context.go(AppRoute.register.path),
+                          child: const Text('Accès sur invitation'),
                         ),
                       ],
                     ),

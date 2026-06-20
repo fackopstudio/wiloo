@@ -1,4 +1,4 @@
-# Frontend Web Reference - Wiloo/NexoraRH
+# Frontend Web Reference - Wiloo
 
 ## But du document
 
@@ -7,7 +7,14 @@ Ce document sert de repere pour comprendre le frontend web existant avant d'impl
 Source auditee:
 
 ```text
-/Users/moussavoulionelstephen/Wiloo-app-mobile/nexorarh/apps/frontend
+/Users/moussavoulionelstephen/Wiloo-app-mobile/apps/frontend
+```
+
+Charte graphique extraite:
+
+```text
+docs/BRAND-REFERENCE.md
+assets/brand/
 ```
 
 ## Stack web existante

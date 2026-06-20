@@ -105,6 +105,24 @@ Export is synchronous.
 
 The backend does not return a signed URL for export download.
 
+The runtime-confirmed `POST /api/compliance/declarations/:id/export` response
+is a composite payload:
+
+```json
+{
+  "declaration": {},
+  "export": { "id": "..." },
+  "download": { "exportId": "...", "fileName": "...", "mimeType": "..." }
+}
+```
+
+Flutter must preserve the raw export snapshot while reading the download id
+from the confirmed locations, in this order:
+
+1. top-level `id` or `exportId` for backward compatibility;
+2. nested `export.id` or `export.exportId`;
+3. nested `download.exportId` or `download.id`.
+
 Download uses a binary stream:
 
 ```text
@@ -199,6 +217,8 @@ Data layer responsibilities:
 - bypass the JSON decoder for binary downloads;
 - map backend errors to `Failure`;
 - map DTOs to domain models.
+- keep raw nested DTO snapshots for compatibility while exposing only runtime-
+  confirmed convenience fields.
 
 Domain layer responsibilities:
 
@@ -234,14 +254,14 @@ The Compliance module will provide:
 
 Before implementing final DTOs and mappers, confirm the following fields and response details from the full backend contract or backend source:
 
-- exact `DeclarationLine` fields;
-- exact `DeclarationExport` fields;
 - exact `DeclarationAttachment` fields;
-- `POST /api/compliance/declarations/:id/export` response shape;
-- whether an `exportId` is immediately available after export;
 - pagination behavior for `GET /periods` and `GET /declarations`.
 
-Until these are confirmed, Flutter may scaffold interfaces and screens, but it must not finalize data-layer assumptions for the nested DTOs or export chaining.
+`DeclarationLine`, `DeclarationExport`, and the composite export response shape
+are now runtime-confirmed for the smoke test dataset, so Flutter may expose
+stable convenience fields for those values while preserving the original raw
+snapshots. `DeclarationAttachment` was not present in sampled runtime payloads
+and must remain raw/untyped until a real payload confirms its structure.
 
 ## Non-Negotiable Rules
 

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../app/router/app_routes.dart';
+import '../../domain/entities/declaration_line.dart';
 import '../../domain/entities/social_fiscal_declaration.dart';
 import '../../domain/enums/declaration_status.dart';
 import '../../domain/value_objects/compliance_access.dart';
@@ -86,6 +87,10 @@ class _DetailBody extends StatelessWidget {
         _TotalsCard(declaration: declaration),
         const SizedBox(height: 8),
 
+        const ComplianceSectionTitle('Lignes de déclaration'),
+        _DeclarationLinesSection(lines: declaration.lines),
+        const SizedBox(height: 8),
+
         // Action bar (admin/hr only)
         if (!access.isReadOnly) ...[
           const ComplianceSectionTitle('Actions'),
@@ -96,6 +101,220 @@ class _DetailBody extends StatelessWidget {
       ],
     );
   }
+}
+
+// ── Declaration Lines ────────────────────────────────────────────────────────
+
+class _DeclarationLinesSection extends StatelessWidget {
+  const _DeclarationLinesSection({required this.lines});
+
+  final List<DeclarationLine>? lines;
+
+  @override
+  Widget build(BuildContext context) {
+    final declarationLines = lines ?? const <DeclarationLine>[];
+    if (declarationLines.isEmpty) {
+      return const ComplianceEmptyState(
+        message:
+            'Aucune ligne de déclaration retournée par le backend pour cette déclaration préparatoire.',
+      );
+    }
+
+    return Column(
+      children: [
+        for (final line in declarationLines)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: _DeclarationLineCard(line: line),
+          ),
+      ],
+    );
+  }
+}
+
+class _DeclarationLineCard extends StatelessWidget {
+  const _DeclarationLineCard({required this.line});
+
+  final DeclarationLine line;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final warnings = line.warnings ?? const <String>[];
+
+    return Card(
+      elevation: 0,
+      color: cs.surfaceContainerLow,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.person_outline, color: cs.primary),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _employeeLabel(line),
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        _employeeReference(line),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const Divider(height: 20),
+            _LineAmountsGrid(line: line),
+            if (warnings.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: cs.errorContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Anomalies ligne',
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: cs.onErrorContainer,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      for (final warning in warnings)
+                        Text(
+                          '• $warning',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: cs.onErrorContainer),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LineAmountsGrid extends StatelessWidget {
+  const _LineAmountsGrid({required this.line});
+
+  final DeclarationLine line;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = [
+      ('Salaire brut', line.grossSalary?.displayValue),
+      ('Base taxable', line.taxableSalary?.displayValue),
+      ('Base cotisations', line.socialContributionBase?.displayValue),
+      ('Cotisations salariales', line.employeeContributionAmount?.displayValue),
+      ('Cotisations patronales', line.employerContributionAmount?.displayValue),
+      ('Retenues', line.withholdingAmount?.displayValue),
+    ].where((row) => row.$2 != null).toList();
+
+    if (rows.isEmpty) {
+      return Text(
+        'Aucun montant détaillé retourné pour cette ligne.',
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurfaceVariant,
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 8,
+      children: [
+        for (final row in rows)
+          SizedBox(
+            width: 180,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  row.$1,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                Text(
+                  row.$2!,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+String _employeeLabel(DeclarationLine line) {
+  final snapshot = line.employeeSnapshot;
+  if (snapshot != null) {
+    final name = _stringValue(snapshot, 'name');
+    if (name != null) {
+      return name;
+    }
+
+    final email = _stringValue(snapshot, 'email');
+    if (email != null) {
+      return email;
+    }
+  }
+
+  return 'Employé non identifié';
+}
+
+String _employeeReference(DeclarationLine line) {
+  final snapshot = line.employeeSnapshot;
+  final snapshotEmployeeId = snapshot == null
+      ? null
+      : _stringValue(snapshot, 'employeeId');
+  final snapshotEmail = snapshot == null
+      ? null
+      : _stringValue(snapshot, 'email');
+  final reference =
+      snapshotEmployeeId ?? line.employeeId ?? line.userId ?? line.id;
+  final parts = <String>[
+    if (reference != null) 'Référence : $reference',
+    ?snapshotEmail,
+  ];
+
+  if (parts.isEmpty) {
+    return 'Référence employé indisponible';
+  }
+
+  return parts.join(' · ');
+}
+
+String? _stringValue(Map<String, Object?> source, String key) {
+  final value = source[key];
+  return value is String && value.isNotEmpty ? value : null;
 }
 
 // ── Status Timeline ──────────────────────────────────────────────────────────
