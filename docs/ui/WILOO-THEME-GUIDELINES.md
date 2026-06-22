@@ -25,10 +25,13 @@ Why it was inconsistent before:
 ### Brand (blue)
 | Token | Hex | Use |
 |-------|-----|-----|
-| `WilooColors.brand` | `#2563EB` | Seed, primary actions, brand accents |
+| `WilooColors.brand` | `#2D59F0` | Seed, primary actions, brand accents |
+| `WilooColors.brandLight` | `#5A7FF5` | Brand highlight / dark-mode accent |
+| `WilooColors.brandPressed` | `#1A3FCC` | Hover / pressed state |
 | `WilooColors.brandDark` | `#0E1F66` | Immersive brand panels / overlays |
-| `WilooColors.brand50` | `#EFF4FE` | Subtle tinted surfaces |
-| `WilooColors.brand100` | `#D6E4FB` | Tinted borders |
+| `WilooColors.brand50` | `#EEF2FE` | Subtle tinted surfaces |
+| `WilooColors.brand100` | `#D9E2FD` | Tinted borders |
+| `WilooColors.brand200` | `#B3C5FB` | Shadow / border accents |
 
 `AppTheme.wilooBlue` / `wilooBlue50` / `wilooBlue100` are aliases of the brand
 tokens (kept for backwards compatibility).

@@ -38,15 +38,24 @@ class WilooColors {
   const WilooColors._();
 
   // ── Brand (blue) ──────────────────────────────────────────────────────────
-  /// Primary brand blue, used as the Material 3 seed.
-  static const Color brand = Color(0xFF2563EB);
+  /// Primary brand blue — Wiloo official primary (#2D59F0).
+  /// Used as the Material 3 seed and all primary action surfaces.
+  static const Color brand = Color(0xFF2D59F0);
+
+  /// Brand highlight / light variant for charts and dark-mode accents.
+  static const Color brandLight = Color(0xFF5A7FF5);
+
+  /// Hover / pressed state for brand primary.
+  static const Color brandPressed = Color(0xFF1A3FCC);
 
   /// Deep navy used on immersive brand panels (e.g. auth illustration overlay).
+  /// Corresponds to wilooBlue900 in the web palette.
   static const Color brandDark = Color(0xFF0E1F66);
 
   /// Tonal brand tints for subtle surfaces and borders.
-  static const Color brand50 = Color(0xFFEFF4FE);
-  static const Color brand100 = Color(0xFFD6E4FB);
+  static const Color brand50 = Color(0xFFEEF2FE);
+  static const Color brand100 = Color(0xFFD9E2FD);
+  static const Color brand200 = Color(0xFFB3C5FB);
 
   // ── Semantic status ───────────────────────────────────────────────────────
   static const Color success = Color(0xFF18794E);
@@ -72,10 +81,8 @@ class AppTheme {
 
   static const _seed = WilooColors.brand;
 
-  /// Brand accent and tonal tints used by onboarding/marketing surfaces.
-  ///
-  /// Kept as `const` aliases of [WilooColors] so existing call sites and const
-  /// widget trees keep compiling. These are blue, matching the brand.
+  /// Brand accent and tonal tints — aliases of [WilooColors] for call sites
+  /// that predate the consolidated token layer.
   static const Color wilooBlue = WilooColors.brand;
   static const Color wilooBlue50 = WilooColors.brand50;
   static const Color wilooBlue100 = WilooColors.brand100;
